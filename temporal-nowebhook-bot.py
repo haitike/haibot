@@ -2,54 +2,40 @@ from telegram import Updater
 
 import gettext
 import configparser
+import os
 
-locale_path = "locale"
+locale_path = "locale/"
 data_path = "data/"
-language_list_path= "locale/language_list"
-default_language = "en" # This is only used the first time, when data/config doesn't exist. 
-current_language = ""
+default_language = "en_EN" # This is only used the first time, when data/config doesn't exist.
 
-languages = {} # Key = ISO Code, Value = Language name
 translate = {} # Key = ISO Code, Value = Language Translation
+#language_names = {"en_EN": _("English"), "es_ES" : _("Spanish"), "es_FL" : _("Spanish (Flavoured)")  }
 
-# FILE STUFF (data/token  &  locale/language_list)
-
+# Token
 f = open(data_path+"token", "r")
 token = (f.read().strip())
 f.close()
 
-f = open(language_list_path,"r")
-language_list = f.read().splitlines()
-f.close()
+# List of language for settings.
+language_list = os.listdir(locale_path)
+for l in language_list:
+    translate[l] = gettext.translation("telegrambot", locale_path, languages=[l], fallback=True)
 
-for line in language_list:
-    l = line.split()
-    languages[l[0]] = l[1]
-
-for l in languages:
-    translate[l] = gettext.translation("telegrambot", locale_path, languages=[l]) 
-
-# CONFIG FILE STUFF
-
+# Using config file for the launching language
+current_language = default_language
 config = configparser.ConfigParser()
-config.read('data/config')
+config.read('data/config.ini')
 if config.has_section("bot"):
     if config.has_option("bot","language"):
-        config_language = config["bot"]["language"]
-        if config_language in languages:
-            current_language = config_language
-        else:
-            current_language = default_language
-    else:
-        current_language = default_language
+        if config["bot"]["language"] in language_list:
+            current_language = config["bot"]["language"]
 else:
-    current_language = default_language
+    config.add_section("bot")
 
 # Set the language of messages
 translate[current_language].install()
 
 # FUNTIONS
-
 def start(bot, update):
     bot.sendMessage(chat_id=update.message.chat_id, text=_("Bot was initiated. Use /help for commands."))
 
@@ -73,25 +59,28 @@ def search(bot, update):
     bot.sendMessage(chat_id=update.message.chat_id, text=_("/search <engine> <word>"))
 
 def settings(bot,update):
-    lcodelist_text = _("Language codes:\n")
-    for l in languages:
-        lcodelist_text+= l + " - " + languages[l] + "\n"
+    languages_codes_text = _("Language codes:\n")
+    for lang in language_list:
+        languages_codes_text+= lang + " "
 
-    help_text = _("Use /settings language <language_code>\n\n" + lcodelist_text)
+    help_text = _("Use /settings language <language_code>\n\n" + languages_codes_text)
 
     command_args = update.message.text.split()
     if len(command_args) < 3:
         bot.sendMessage(chat_id=update.message.chat_id, text=help_text)
     else:
         if command_args[1] == "language" or "l":
-            if command_args[2] in languages:
-                bot.sendMessage(chat_id=update.message.chat_id, text=_("Language changed to %s") % (languages[command_args[2]]) )
+            if command_args[2] in language_list:
+                bot.sendMessage(chat_id=update.message.chat_id, text=_("Language changed to %s") % (command_args[2]))
+                global current_language
                 current_language =  command_args[2]
                 translate[current_language].install()
+
             else:
-                bot.sendMessage(chat_id=update.message.chat_id, text=_("Unknown language code\n\n" + lcodelist_text))
+                bot.sendMessage(chat_id=update.message.chat_id, text=_("Unknown language code\n\n" + languages_codes_text))
         else:
             bot.sendMessage(chat_id=update.message.chat_id, text=help_text)
+
 def unknown(bot, update):
     bot.sendMessage(chat_id=update.message.chat_id, text=_("%s is a unknown command. Use /help for available commands.") % (update.message.text))
 
@@ -109,11 +98,24 @@ def main():
 
     #dp.addErrorHandler(error)
 
-    updater.start_polling()
+    update_queue = updater.start_polling()
+    while True:
+        text = input("Write <stop> for stopping the bot\n")
 
-    updater.idle()
+        # Gracefully stop the event handler
+        if text == 'stop':
+            updater.stop()
+            break
 
-    # SAVE CONFIG FILE HERE
+        # else, put the text into the update queue
+        elif len(text) > 0:
+            update_queue.put(text)  # Put command into queue
+
+    #Save the last language used
+    config.set('bot', 'language', current_language)
+    with open('data/config.ini', 'w') as configfile:    # save
+        config.write(configfile)
+
 if __name__ == "__main__":
     main()
 
