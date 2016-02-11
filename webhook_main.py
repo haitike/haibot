@@ -4,6 +4,7 @@ import configparser
 
 data_path = "data/"
 configfile_path = data_path + "config.cfg"
+flaskconfig_path = data_path + "flaskapp.cfg"
 
 # Open Config File
 config = configparser.ConfigParser()
@@ -16,7 +17,7 @@ token = config["bot"]["token"]
 
 #Flask Start
 app = Flask(__name__)
-app.config.from_pyfile('flaskapp.cfg')
+app.config.from_pyfile(flaskconfig_path)
 
 # Bot open
 global bot
