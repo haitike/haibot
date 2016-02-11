@@ -13,7 +13,7 @@ if config.has_section("bot") == False:
     config.add_section("bot")
 
 # Token
-token = config["bot"]["token"]
+token = config.get("bot","token")
 
 #Flask Start
 app = Flask(__name__)

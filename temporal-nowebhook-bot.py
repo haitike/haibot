@@ -16,7 +16,7 @@ if config.has_section("bot") == False:
     config.add_section("bot")
 
 # Token
-token = config["bot"]["token"]
+token = config.get("bot","token")
 
 # List of language translations.
 translate = {}
@@ -27,8 +27,8 @@ for l in language_list:
 # Loading previous language as Translation.
 current_language = default_language
 if config.has_option("bot","language"):
-    if config["bot"]["language"] in language_list:
-        current_language = config["bot"]["language"]
+    if config.get("bot","language") in language_list:
+        current_language = config.get("bot","language")
 translate[current_language].install()
 
 # FUNTIONS

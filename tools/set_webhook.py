@@ -7,8 +7,8 @@ configfile_path = "../data/config.cfg"
 config = configparser.ConfigParser()
 config.read( configfile_path )
 
-token = token = config["bot"]["token"]
-url = config["bot"]["webhook_url"]
+token = config.get("bot","token")
+url = config.get("bot","webhook_url")
 
 
 bot = telegram.Bot(token=token)
