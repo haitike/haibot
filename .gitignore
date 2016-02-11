@@ -65,5 +65,5 @@ target/
 # pyenv
 .python-version
 
-# Bot Data (Token, etc)
-data/
+# IDEs config files
+.idea/

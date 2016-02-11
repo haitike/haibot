@@ -6,33 +6,29 @@ import os
 
 locale_path = "locale/"
 data_path = "data/"
+configfile_path = data_path + "config.cfg"
 default_language = "en_EN" # This is only used the first time, when data/config doesn't exist.
 
-translate = {} # Key = ISO Code, Value = Language Translation
-#language_names = {"en_EN": _("English"), "es_ES" : _("Spanish"), "es_FL" : _("Spanish (Flavoured)")  }
+# Open Config File
+config = configparser.ConfigParser()
+config.read( configfile_path )
+if config.has_section("bot") == False:
+    config.add_section("bot")
 
 # Token
-f = open(data_path+"token", "r")
-token = (f.read().strip())
-f.close()
+token = config["bot"]["token"]
 
-# List of language for settings.
+# List of language translations.
+translate = {}
 language_list = os.listdir(locale_path)
 for l in language_list:
     translate[l] = gettext.translation("telegrambot", locale_path, languages=[l], fallback=True)
 
-# Using config file for the launching language
+# Loading previous language as Translation.
 current_language = default_language
-config = configparser.ConfigParser()
-config.read('data/config.ini')
-if config.has_section("bot"):
-    if config.has_option("bot","language"):
-        if config["bot"]["language"] in language_list:
-            current_language = config["bot"]["language"]
-else:
-    config.add_section("bot")
-
-# Set the language of messages
+if config.has_option("bot","language"):
+    if config["bot"]["language"] in language_list:
+        current_language = config["bot"]["language"]
 translate[current_language].install()
 
 # FUNTIONS
@@ -113,7 +109,7 @@ def main():
 
     #Save the last language used
     config.set('bot', 'language', current_language)
-    with open('data/config.ini', 'w') as configfile:    # save
+    with open(configfile_path, 'w') as configfile:    # save
         config.write(configfile)
 
 if __name__ == "__main__":
