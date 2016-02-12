@@ -1,46 +1,38 @@
 from flask import Flask, request
+from os.path import join as joinpath
 import telegram
 import configparser
 
 data_path = "data/"
-configfile_path = data_path + "config.cfg"
-flaskconfig_path = data_path + "flaskapp.cfg"
+configfile_path = joinpath(data_path, "config.cfg")
+flaskconfig_path = joinpath(data_path, "flaskapp.cfg")
 
-# Open Config File
 config = configparser.ConfigParser()
 config.read( configfile_path )
-if config.has_section("bot") == False:
-    config.add_section("bot")
 
-# Token
-token = config.get("bot","token")
-
-#Flask Start
 app = Flask(__name__)
 app.config.from_pyfile(flaskconfig_path)
+token = ""
 
-# Bot open
-global bot
-bot = telegram.Bot(token=token)
-
-# Displayed text in the website.
 @app.route("/")
 def test():
     return "<strong>It's Alive!</strong>"
 
-# Webhook Handler
-@app.route('/'+token, methods=['POST'])
+@app.route('/'+token)
 def webhook_handler():
     if request.method == "POST":
-        # retrieve
         update = telegram.Update.de_json(request.get_json(force=True))
         chat_id = update.message.chat.id
         text = update.message.text.encode('utf-8')
-
-        # repeat the same message back (echo)
-        bot.sendMessage(chat_id=chat_id, text=text)
-
+        bot.sendMessage(chat_id=chat_id, text=text) # echo (temp)
     return 'ok'
 
+
 if __name__ == '__main__':
-    app.run()
+    try:
+        token = config.get("bot","token")
+    except (configparser.NoSectionError, configparser.NoOptionError):
+        print("No token found in data/config.cfg")
+    else:
+        bot = telegram.Bot(token=token)  #try
+        app.run()

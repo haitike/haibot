@@ -1,37 +1,37 @@
 from telegram import Updater
+from os.path import join as joinpath
 
 import gettext
 import configparser
 import os
 
-locale_path = "locale/"
-data_path = "data/"
-configfile_path = data_path + "config.cfg"
+locale_path = "../locale/"
+data_path = "../data/"
+configfile_path = joinpath(data_path, "config.cfg")
 default_language = "en_EN" # This is only used the first time, when data/config doesn't exist.
 
-# Open Config File
+# Fix Python 2.x. input
+try: input = raw_input
+except NameError: pass
+
 config = configparser.ConfigParser()
 config.read( configfile_path )
-if config.has_section("bot") == False:
-    config.add_section("bot")
 
-# Token
+############################ try:
 token = config.get("bot","token")
 
-# List of language translations.
 translate = {}
 language_list = os.listdir(locale_path)
 for l in language_list:
     translate[l] = gettext.translation("telegrambot", locale_path, languages=[l], fallback=True)
 
-# Loading previous language as Translation.
 current_language = default_language
+############################ try:
 if config.has_option("bot","language"):
     if config.get("bot","language") in language_list:
         current_language = config.get("bot","language")
 translate[current_language].install()
 
-# FUNTIONS
 def start(bot, update):
     bot.sendMessage(chat_id=update.message.chat_id, text=_("Bot was initiated. Use /help for commands."))
 
@@ -91,23 +91,18 @@ def main():
     dp.addTelegramCommandHandler("search", search)
     dp.addTelegramCommandHandler("settings",settings)
     dp.addUnknownTelegramCommandHandler(unknown)
-
     #dp.addErrorHandler(error)
 
     update_queue = updater.start_polling()
     while True:
-        text = input("Write <stop> for stopping the bot\n")
-
-        # Gracefully stop the event handler
+        text = input("Write {stop} for stopping the bot\n")
         if text == 'stop':
             updater.stop()
             break
-
-        # else, put the text into the update queue
         elif len(text) > 0:
             update_queue.put(text)  # Put command into queue
 
-    #Save the last language used
+    ############################ try:
     config.set('bot', 'language', current_language)
     with open(configfile_path, 'w') as configfile:    # save
         config.write(configfile)
