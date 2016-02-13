@@ -1,15 +1,10 @@
 #!/usr/bin/env python
 
-import configparser
 import telegram
-configfile_path = "../data/config.cfg"
+import data.config as config
 
-config = configparser.ConfigParser()
-config.read( configfile_path )
-
-token = config.get("bot","token")
-url = config.get("bot","webhook_url")
-
+token = config.TOKEN
+url = config.WEBHOOK_URL
 
 bot = telegram.Bot(token=token)
 s = bot.setWebhook(url + "/" + token)

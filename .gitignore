@@ -65,8 +65,5 @@ target/
 # pyenv
 .python-version
 
-# Program Data
-data/
-
 # IDEs config files
 .idea/
