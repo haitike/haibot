@@ -67,3 +67,6 @@ target/
 
 # IDEs config files
 .idea/
+
+# config file
+data/config.py
