@@ -9,6 +9,9 @@ app = Flask(__name__)
 app.config.from_pyfile(CONFIGFILE_PATH) #try
 bot = telegram.Bot(token=app.config["TOKEN"])  #try
 
+def help(bot, update):
+    bot.sendMessage(chat_id=update.message.chat_id, text="this is the help message ")
+
 @app.route("/")
 def test():
     return "<strong>It's Alive!</strong>"
@@ -16,10 +19,10 @@ def test():
 @app.route('/'+app.config["TOKEN"], methods=['POST'])
 def webhook_handler():
     update = telegram.Update.de_json(request.get_json(force=True))
-    chat_id = update.message.chat.id
-    text = update.message.text#.encode('utf-8')
-    bot.sendMessage(chat_id=chat_id, text=text)
+    dp.processUpdate(update)
     return 'ok'
 
 if __name__ == '__main__':
+    dp = telegram.Dispatcher(bot, None)
+    dp.addTelegramCommandHandler("help", help)
     app.run()
