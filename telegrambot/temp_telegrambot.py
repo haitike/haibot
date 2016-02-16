@@ -1,36 +1,31 @@
-from telegram import Updater
+from telegram import Updater, Dispatcher
 from os.path import join as joinpath
+import data.config as config
 
 import gettext
-import configparser
 import os
+import logging
 
-locale_path = "../locale/"
-data_path = "../data/"
-configfile_path = joinpath(data_path, "config.cfg")
-default_language = "en_EN" # This is only used the first time, when data/config doesn't exist.
+LOCALE_PATH = "locale"
+DEFAULT_LANGUAGE = "en_EN" # This is only used the first time, when data/config doesn't exist.
 
 # Fix Python 2.x. input
 try: input = raw_input
 except NameError: pass
 
-config = configparser.ConfigParser()
-config.read( configfile_path )
-
-############################ try:
-token = config.get("bot","token")
-
 translate = {}
-language_list = os.listdir(locale_path)
+language_list = os.listdir(LOCALE_PATH)
 for l in language_list:
-    translate[l] = gettext.translation("telegrambot", locale_path, languages=[l], fallback=True)
+    translate[l] = gettext.translation("telegrambot", LOCALE_PATH, languages=[l], fallback=True)
 
-current_language = default_language
+current_language = DEFAULT_LANGUAGE
 ############################ try:
-if config.has_option("bot","language"):
-    if config.get("bot","language") in language_list:
-        current_language = config.get("bot","language")
+#if config.has_option("bot","language"):
+#    if config.get("bot","language") in language_list:
+#        current_language = config.get("bot","language")
 translate[current_language].install()
+
+logger = logging.getLogger("bot_log")
 
 def start(bot, update):
     bot.sendMessage(chat_id=update.message.chat_id, text=_("Bot was initiated. Use /help for commands."))
@@ -107,6 +102,31 @@ def main():
     with open(configfile_path, 'w') as configfile:    # save
         config.write(configfile)
 
-if __name__ == "__main__":
-    main()
+class TelegramBot(object):
+    def __init__(self):
+        logger.debug("TelegramBot initialized")
+
+    def start_webhook(self):
+        from telegram import Bot
+        bot = Bot(token=config.TOKEN)  #try
+        self.dispatcher = Dispatcher(bot,None)
+        self.add_handlers()
+
+    def start_looping(self):
+        pass
+
+    def polling_loop(self):
+        pass
+
+    def add_handlers(self):
+        self.dispatcher.addTelegramCommandHandler("help", self.command_help)
+
+    def command_help(self, bot, update):
+        bot.sendMessage(chat_id=update.message.chat_id, text=_(
+            """Available Commands:
+            /start - Iniciciate or Restart the bot
+            /help - Show the command list.
+            /terraria status/autonot/ip - Terraria options
+            /list <option> <item> - Manage your lists.
+            /search <engine> <word> - Search using a engine."""))
 
