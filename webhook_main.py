@@ -5,7 +5,7 @@ import logging
 CONFIGFILE_PATH = "data/config.py"
 app = Flask(__name__)
 app.config.from_pyfile(CONFIGFILE_PATH) #try
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("bot_log")
 
 @app.route("/")
@@ -19,8 +19,7 @@ def webhook_handler():
 
 if __name__ == '__main__':
     try:
-        bot = TelegramBot(app.config)
-        bot.start_webhook()
+        bot = TelegramBot(config=app.config,use_webhook=True)
         app.run()
     except:
         logger.exception("Finished program.")

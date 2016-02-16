@@ -1,7 +1,7 @@
 import gettext
 import os, sys
 import logging
-from telegram import Updater, Dispatcher, Update
+from telegram import Updater, Dispatcher, Update, Bot
 
 DEFAULT_LANGUAGE = "en_EN"
 logger = logging.getLogger("bot_log")
@@ -16,8 +16,10 @@ class TelegramBot(object):
     translations = {}
     api = None
 
-    def __init__(self, config):
+    def __init__(self, config,use_webhook=False):
         self.config = config
+
+        #LANGUAGE STUFF
         self.language_list = os.listdir(self.config["LOCALE_DIR"])
         for l in self.language_list:
             self.translations[l] = gettext.translation("telegrambot", self.config["LOCALE_DIR"], languages=[l], fallback=True)
@@ -29,11 +31,17 @@ class TelegramBot(object):
         except:
             translation_install(self.translations[DEFAULT_LANGUAGE])
 
-        #TEMPORAL
-        from telegram import Bot
+        # API INICIALIZATION
         self.api = Bot(token=self.config["TOKEN"])  #try
+        if use_webhook:
+            self.set_webhook()
+            self.dispatcher = Dispatcher(self.api,None)
+        else:
+            self.disable_webhook()
+            self.updater = Updater(token=self.config["TOKEN"])
+            self.dispatcher = self.updater.dispatcher
 
-        logger.debug("TelegramBot initialized")
+        self.add_handlers()
 
     def set_webhook(self):
         s = self.api.setWebhook(self.config["WEBHOOK_URL"] + "/" + self.config["TOKEN"])
@@ -51,35 +59,13 @@ class TelegramBot(object):
             logger.warning("webhook couldn't be disabled")
         return s
 
-    def start_webhook(self):
-        self.set_webhook()
-        self.dispatcher = Dispatcher(self.api,None) #TEMPORAL
-        self.add_handlers()
-
-    def start_polling(self):
-        self.disable_webhook()
-        self.updater = Updater(token=self.config["TOKEN"]) # TEMPORAL
-        self.dispatcher = self.updater.dispatcher
-        self.add_handlers()
-
     def webhook_handler(self, request):
         update = Update.de_json(request)
         self.dispatcher.processUpdate(update)
 
-    def polling_loop(self):
-
-        # Fix Python 2.x. input
-        try: input = raw_input
-        except NameError: pass
-
+    def start_polling_loop(self):
         self.update_queue = self.updater.start_polling()
-        while True:
-            text = input("Write {stop} for stopping the bot\n")
-            if text == 'stop':
-                self.updater.stop()
-                break
-            elif len(text) > 0:
-                self.update_queue.put(text)
+        self.updater.idle()
 
     def add_handlers(self):
         self.dispatcher.addTelegramCommandHandler("start", self.command_start)
@@ -101,7 +87,8 @@ class TelegramBot(object):
             /help - Show the command list.
             /terraria status/autonot/ip - Terraria options
             /list <option> <item> - Manage your lists.
-            /search <engine> <word> - Search using a engine."""))
+            /search <engine> <word> - Search using a engine.
+            /settings - Change bot options (language, etc.)"""))
 
     def command_terraria(self, bot, update):
         bot.sendMessage(chat_id=update.message.chat_id, text=_(
