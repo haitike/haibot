@@ -3,6 +3,7 @@ import os
 WEBHOOK_URL = ""
 LANGUAGE = "en_EN"
 TOKEN = ""
+LOCALE_DIR = "locale"
 
 DEBUG = False
 PROPAGATE_EXCEPTIONS = True

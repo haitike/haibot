@@ -1,13 +1,8 @@
-from telegram import Updater, Dispatcher
-from os.path import join as joinpath
-import data.config as config
-
-
 import gettext
 import os, sys
 import logging
+from telegram import Updater, Dispatcher, Update
 
-LOCALE_PATH = "locale"
 DEFAULT_LANGUAGE = "en_EN"
 logger = logging.getLogger("bot_log")
 
@@ -21,14 +16,14 @@ class TelegramBot(object):
     translations = {}
     api = None
 
-    def __init__(self):
-
-        self.language_list = os.listdir(LOCALE_PATH)
+    def __init__(self, config):
+        self.config = config
+        self.language_list = os.listdir(self.config["LOCALE_DIR"])
         for l in self.language_list:
-            self.translations[l] = gettext.translation("telegrambot", LOCALE_PATH, languages=[l], fallback=True)
+            self.translations[l] = gettext.translation("telegrambot", self.config["LOCALE_DIR"], languages=[l], fallback=True)
         try:
-            if config.LANGUAGE in self.language_list:
-                translation_install(self.translations[config.LANGUAGE])
+            if self.config["LANGUAGE"] in self.language_list:
+                translation_install(self.translations[self.config["LANGUAGE"]])
             else:
                 translation_install(self.translations[DEFAULT_LANGUAGE])
         except:
@@ -36,16 +31,17 @@ class TelegramBot(object):
 
         #TEMPORAL
         from telegram import Bot
-        self.api = Bot(token=config.TOKEN)  #try
+        self.api = Bot(token=self.config["TOKEN"])  #try
 
         logger.debug("TelegramBot initialized")
 
     def set_webhook(self):
-        s = self.api.setWebhook(config.WEBHOOK_URL + "/" + config.TOKEN)
+        s = self.api.setWebhook(self.config["WEBHOOK_URL"] + "/" + self.config["TOKEN"])
         if s:
             logger.info("webhook setup worked")
         else:
             logger.warning("webhook setup failed")
+        return s
 
     def disable_webhook(self):
         s = self.api.setWebhook("")
@@ -53,6 +49,7 @@ class TelegramBot(object):
             logger.info("webhook was disabled")
         else:
             logger.warning("webhook couldn't be disabled")
+        return s
 
     def start_webhook(self):
         self.set_webhook()
@@ -61,9 +58,13 @@ class TelegramBot(object):
 
     def start_polling(self):
         self.disable_webhook()
-        self.updater = Updater(token=config.TOKEN) # TEMPORAL
+        self.updater = Updater(token=self.config["TOKEN"]) # TEMPORAL
         self.dispatcher = self.updater.dispatcher
         self.add_handlers()
+
+    def webhook_handler(self, request):
+        update = Update.de_json(request)
+        self.dispatcher.processUpdate(update)
 
     def polling_loop(self):
 
@@ -128,8 +129,8 @@ class TelegramBot(object):
             if command_args[1] == "language" or "l":
                 if command_args[2] in self.language_list:
                     bot.sendMessage(chat_id=update.message.chat_id, text=_("Language changed to %s") % (command_args[2]))
-                    config.LANGUAGE =  command_args[2]
-                    translation_install(self.translations[config.LANGUAGE])
+                    self.config["LANGUAGE"] =  command_args[2]
+                    translation_install(self.translations[self.config["LANGUAGE"]])
                 else:
                     bot.sendMessage(chat_id=update.message.chat_id, text=_("Unknown language code\n\n" + languages_codes_text))
             else:

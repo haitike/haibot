@@ -1,30 +1,25 @@
 from flask import Flask, request
-from os.path import join as joinpath
 from telegrambot.telegrambot import TelegramBot
-import telegram
 import logging
 
-DATA_PATH = "data"
-CONFIGFILE_PATH = joinpath(DATA_PATH, "config.py")
-
+CONFIGFILE_PATH = "data/config.py"
 app = Flask(__name__)
 app.config.from_pyfile(CONFIGFILE_PATH) #try
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("bot_log")
 
 @app.route("/")
-def test():
+def index_test():
     return "<strong>It's Alive!</strong>"
 
 @app.route('/'+app.config["TOKEN"], methods=['POST'])
 def webhook_handler():
-    update = telegram.Update.de_json(request.get_json(force=True))
-    bot.dispatcher.processUpdate(update)
+    bot.webhook_handler(request.get_json(force=True))
     return 'ok'
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    logger = logging.getLogger("bot_log")
     try:
-        bot = TelegramBot()
+        bot = TelegramBot(app.config)
         bot.start_webhook()
         app.run()
     except:
