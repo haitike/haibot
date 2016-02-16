@@ -1,6 +1,6 @@
 from flask import Flask, request
 from os.path import join as joinpath
-from telegrambot.temp_telegrambot import TelegramBot
+from telegrambot.telegrambot import TelegramBot
 import telegram
 import logging
 

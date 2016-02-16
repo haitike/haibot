@@ -1,1 +1,3 @@
 (B) (16-02-2016) Save app language when finishing it.
+(c) (16-02-2016) Update locale template and translation. Upload the new template to the repo.
+(D) (16-02-2016) add more logging messages to logger.
