@@ -20,7 +20,7 @@ def webhook_handler():
 
 @app.route("/"+app.config["TOKEN"]+"/server_on")
 def server_on():
-    bot.terraria_on(request.remote_addr)
+    bot.terraria_on(request.headers['X-Forwarded-For'])
     return "Terraria Server is On (IP: %s)" % (bot.terraria_ip)
 
 @app.route("/"+app.config["TOKEN"]+"/server_off")
