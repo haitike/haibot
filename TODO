@@ -1,3 +1,5 @@
-(B) (16-02-2016) Save app language when finishing it.
-(c) (16-02-2016) Update locale template and translation. Upload the new template to the repo. Compile .mo in Both repos.
+(C) (16-02-2016) Save app language when finishing it.
+(C) (16-02-2016) Update locale template and translation. Upload the new template to the repo. Compile .mo in Both repos.
+(C) (17-02-2016) server_on / server_off -> pillar de ese request el user id de telegram, a traves de un parametro por get (opcional)
+asi el bot sabe quien ha iniciado el server y lo dice. Si la otra persona lo intenta iniciar, le puede notificar a ambos que están "colisionando".
 (D) (16-02-2016) add more logging messages to logger.

@@ -15,6 +15,8 @@ def translation_install(translation): # Comnpability with both python 2 / 3
 class TelegramBot(object):
     translations = {}
     api = None
+    terraria_status = False
+    terraria_ip = None
 
     def __init__(self, config,use_webhook=False):
         self.config = config
@@ -91,10 +93,27 @@ class TelegramBot(object):
             /settings - Change bot options (language, etc.)"""))
 
     def command_terraria(self, bot, update):
-        bot.sendMessage(chat_id=update.message.chat_id, text=_(
-            "/terraria status\n"
-            "/terraria autonot\n"
-            "/terraria ip\n"))
+        help_text = _(
+            """Use one of the following commands:
+            /terraria status
+            /terraria autonot
+            /terraria ip""")
+        command_args = update.message.text.split()
+        if len(command_args) < 2:
+            bot.sendMessage(chat_id=update.message.chat_id, text=help_text)
+        else:
+            if command_args[1] == "status" or command_args[1] == "s":
+                if self.terraria_status:
+                    bot.sendMessage(chat_id=update.message.chat_id, text=_("Terraria server is On (IP: %s)") % (self.terraria_ip))
+                else:
+                    bot.sendMessage(chat_id=update.message.chat_id, text=_("Terraria server is Off"))
+            elif command_args[1] == "autonot" or command_args[1] == "a":
+                bot.sendMessage(chat_id=update.message.chat_id, text=_("placeholder text"))
+            elif command_args[1] == "ip" or command_args[1] == "i":
+                ip_text = self.terraria_ip if self.terraria_ip else "There is no IP"
+                bot.sendMessage(chat_id=update.message.chat_id, text=ip_text)
+            else:
+                bot.sendMessage(chat_id=update.message.chat_id, text=help_text)
 
     def command_list(self, bot, update):
         bot.sendMessage(chat_id=update.message.chat_id, text=_("/list <option> <item>"))
@@ -105,7 +124,7 @@ class TelegramBot(object):
     def command_settings(self, bot,update):
         languages_codes_text = _("Language codes:\n")
         for lang in self.language_list:
-            languages_codes_text+= "<"+lang + "> "
+            languages_codes_text+= "<"+lang+"> "
 
         help_text = _("Use /settings language language_code\n\n" + languages_codes_text)
 
@@ -127,3 +146,10 @@ class TelegramBot(object):
         bot.sendMessage(chat_id=update.message.chat_id, text=_("%s is a unknown command. Use /help for available commands.") % (update.message.text))
 
 
+    def terraria_on(self, ip):
+        self.terraria_status = True
+        self.terraria_ip = ip
+
+    def terraria_off(self):
+        self.terraria_status = False
+        self.terraria_ip = None

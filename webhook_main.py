@@ -16,7 +16,17 @@ def index_test():
 @app.route('/'+app.config["TOKEN"], methods=['POST'])
 def webhook_handler():
     bot.webhook_handler(request.get_json(force=True))
-    return 'ok'
+    return "ok"
+
+@app.route("/"+app.config["TOKEN"]+"/server_on")
+def server_on():
+    bot.terraria_on(request.remote_addr)
+    return "Terraria Server is On (IP: %s)" % (bot.terraria_ip)
+
+@app.route("/"+app.config["TOKEN"]+"/server_off")
+def server_off():
+    bot.terraria_off()
+    return "Terraria Server is Off"
 
 if __name__ == '__main__':
     try:
