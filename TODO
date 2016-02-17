@@ -1,5 +1,7 @@
-(C) (16-02-2016) Save app language when finishing it.
-(C) (16-02-2016) Update locale template and translation. Upload the new template to the repo. Compile .mo in Both repos.
-(C) (17-02-2016) server_on / server_off -> pillar de ese request el user id de telegram, a traves de un parametro por get (opcional)
+(C) (16-02-2016) (mongo) Save app language when finishing it.
+(C) (16-02-2016) (i18n) Update locale template and translation (hito). Upload the new template to the repo. Compile .mo in Both repos.
+(C) (17-02-2016) (Terraria) server_on / server_off -> pillar de ese request el user id de telegram, a traves de un parametro por get (opcional)
 asi el bot sabe quien ha iniciado el server y lo dice. Si la otra persona lo intenta iniciar, le puede notificar a ambos que están "colisionando".
-(D) (16-02-2016) add more logging messages to logger.
+(C) (17-02-2016) (Terraria) Si el servidor está ON y se le manda otro ON, mostrar un error en la web y en el autonot.
+(D) (16-02-2016) (log) add more logging messages to logger.
+(E) (17-02-2016) (Terraria) on/off solo para usuarios en el whitelist.

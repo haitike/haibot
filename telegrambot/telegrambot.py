@@ -17,6 +17,7 @@ class TelegramBot(object):
     api = None
     terraria_status = False
     terraria_ip = None
+    terraria_host = None
 
     def __init__(self, config,use_webhook=False):
         self.config = config
@@ -87,7 +88,7 @@ class TelegramBot(object):
             """Available Commands:
             /start - Iniciciate or Restart the bot
             /help - Show the command list.
-            /terraria status/autonot/ip - Terraria options
+            /terraria status/log/autonot/ip - Terraria options
             /list <option> <item> - Manage your lists.
             /search <engine> <word> - Search using a engine.
             /settings - Change bot options (language, etc.)"""))
@@ -95,23 +96,41 @@ class TelegramBot(object):
     def command_terraria(self, bot, update):
         help_text = _(
             """Use one of the following commands:
-            /terraria status
-            /terraria autonot
-            /terraria ip""")
+            /terraria status - Server status (s)
+            /terraria log - Show Server history (l)
+            /terraria autonot - Toogle Autonotifications to user (a)
+            /terraria ip - Display server IP (i)
+            /terraria milestone - Add a milestone to server (m)
+            /terraria on/off manually change server status""")
         command_args = update.message.text.split()
         if len(command_args) < 2:
             bot.sendMessage(chat_id=update.message.chat_id, text=help_text)
         else:
             if command_args[1] == "status" or command_args[1] == "s":
                 if self.terraria_status:
-                    bot.sendMessage(chat_id=update.message.chat_id, text=_("Terraria server is On (IP: %s)") % (self.terraria_ip))
+                    bot.sendMessage(chat_id=update.message.chat_id, text=_("Terraria server is On (IP:%s) (Host:%s)") %
+                                                                          (self.terraria_ip, self.terraria_host))
                 else:
                     bot.sendMessage(chat_id=update.message.chat_id, text=_("Terraria server is Off"))
+            elif command_args[1] == "log" or command_args[1] == "l":
+                bot.sendMessage(chat_id=update.message.chat_id, text=_("placeholder log text"))
             elif command_args[1] == "autonot" or command_args[1] == "a":
-                bot.sendMessage(chat_id=update.message.chat_id, text=_("placeholder text"))
+                bot.sendMessage(chat_id=update.message.chat_id, text=_("placeholder autonot text"))
             elif command_args[1] == "ip" or command_args[1] == "i":
-                ip_text = self.terraria_ip if self.terraria_ip else "There is no IP"
+                ip_text = self.terraria_ip if self.terraria_ip else _("There is no IP")
                 bot.sendMessage(chat_id=update.message.chat_id, text=ip_text)
+            elif command_args[1] == "on":
+                if len(command_args) > 2:
+                    self.terraria_set_on(host=update.message.from_user.first_name, ip=command_args[2])
+                    bot.sendMessage(chat_id=update.message.chat_id, text=_("Server was set On by %s (IP:%s)") %
+                                                                          (self.terraria_host, self.terraria_ip))
+                else:
+                    self.terraria_set_on(host=update.message.from_user.first_name)
+                    bot.sendMessage(chat_id=update.message.chat_id, text=_("Server was set On by %s\n*You can set a IP with:"
+                                                                           " /server on <your ip>" % (self.terraria_host)))
+            elif command_args[1] == "off":
+                self.terraria_set_off()
+                bot.sendMessage(chat_id=update.message.chat_id, text=_("Terraria Server Status changed to Off"))
             else:
                 bot.sendMessage(chat_id=update.message.chat_id, text=help_text)
 
@@ -145,11 +164,12 @@ class TelegramBot(object):
     def command_unknown(self, bot, update):
         bot.sendMessage(chat_id=update.message.chat_id, text=_("%s is a unknown command. Use /help for available commands.") % (update.message.text))
 
-
-    def terraria_on(self, ip):
+    def terraria_set_on(self, ip=None, host="Anon"):
         self.terraria_status = True
         self.terraria_ip = ip
+        self.terraria_host = host
 
-    def terraria_off(self):
+    def terraria_set_off(self):
         self.terraria_status = False
         self.terraria_ip = None
+        self.terraria_host = None
