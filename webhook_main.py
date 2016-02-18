@@ -10,7 +10,7 @@ app.config.from_pyfile(CONFIGFILE_PATH) #try
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("bot_log")
 
-mclient = MongoClient()
+mclient = MongoClient(app.config["MONGO_URL"])
 db = mclient[app.config["DB_NAME"]]
 
 bot = TelegramBot(app.config,db,use_webhook=True)
@@ -39,4 +39,5 @@ if __name__ == '__main__':
         app.run()
     except:
         logger.critical("Flask Application couldn't start")
+    mclient.close()
     logger.info("Finished program.")

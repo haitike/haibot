@@ -10,7 +10,7 @@ config.from_pyfile(CONFIGFILE_PATH) #try
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("bot_log")
 
-mclient = MongoClient()
+mclient = MongoClient(config["MONGO_URL"])
 db = mclient[config["DB_NAME"]]
 
 if __name__ == '__main__':
