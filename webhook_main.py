@@ -26,8 +26,9 @@ def webhook_handler():
 
 @app.route("/"+app.config["TOKEN"]+"/server_on")
 def server_on():
-    bot.terraria_change_status(True,ip=request.headers['X-Forwarded-For'])
-    return "Terraria Server is On (IP: %s) (Host: %s)" % (bot.terraria_current_ip, "Unknown") #See TODO for "Unknown"
+    ip = request.headers['X-Forwarded-For'] # See TODO for IP Retrieving method
+    bot.terraria_change_status(True,ip=ip)
+    return "Terraria Server is On (IP: %s) (Host: %s)" % (ip, "Unknown") #See TODO for "Unknown"
 
 @app.route("/"+app.config["TOKEN"]+"/server_off")
 def server_off():

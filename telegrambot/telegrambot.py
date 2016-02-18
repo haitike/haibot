@@ -7,6 +7,9 @@ from .terraria_update import *
 DEFAULT_LANGUAGE = "en_EN"
 logger = logging.getLogger("bot_log")
 
+ASCENDING = 1
+DESCENDING = -1
+
 def translation_install(translation): # Comnpability with both python 2 / 3
     kwargs = {}
     if sys.version < '3':
@@ -16,9 +19,6 @@ def translation_install(translation): # Comnpability with both python 2 / 3
 class TelegramBot(object):
     translations = {}
     api = None
-    terraria_current_status = False
-    terraria_current_ip = None
-    terraria_current_host = False
 
     def __init__(self, config, db, use_webhook=False):
         self.config = config
@@ -89,7 +89,6 @@ class TelegramBot(object):
         self.dispatcher.addUnknownTelegramCommandHandler(self.command_unknown)
         #self.dispatcher.addErrorHandler(self.error_handle)
 
-
         self.dispatcher.addTelegramCommandHandler("dbtest",self.command_dbtest)
 
     def command_start(self, bot, update):
@@ -110,7 +109,7 @@ class TelegramBot(object):
         help_text = _(
             """Use one of the following commands:
             /terraria status - Server status (s)
-            /terraria log - Show Server history (l)
+            /terraria log <number> - Show Server history (l)
             /terraria autonot - Toogle Autonotifications to user (a)
             /terraria ip - Display server IP (i)
             /terraria milestone - Add a milestone to server (m)
@@ -120,18 +119,41 @@ class TelegramBot(object):
             bot.sendMessage(chat_id=update.message.chat_id, text=help_text)
         else:
             if command_args[1] == "status" or command_args[1] == "s":
-                if self.terraria_current_status:
+                last_update = self.get_col_lastest(self.col_terraria)
+                if last_update["status"]:
                     bot.sendMessage(chat_id=update.message.chat_id, text=_("Terraria server is On (IP:%s) (Host:%s)") %
-                                                                (self.terraria_current_ip, self.terraria_current_host))
+                                                                (last_update["ip"], last_update["user"]))
                 else:
                     bot.sendMessage(chat_id=update.message.chat_id, text=_("Terraria server is Off"))
             elif command_args[1] == "log" or command_args[1] == "l":
-                bot.sendMessage(chat_id=update.message.chat_id, text=_("placeholder log text"))
+                if len(command_args) > 2:
+                    try:
+                        limit = int(command_args[2])
+                    except:
+                        if command_args[2] == "m":
+                            bot.sendMessage(chat_id=update.message.chat_id, text=_("Log milestone placeholder."))
+                        else:
+                            bot.sendMessage(chat_id=update.message.chat_id, text=_(
+                                "/terraria log <number> - Number of log entries to show\n"
+                                "/terraria log m - Show only milestones"))
+                else:
+                    limit = 5
+                for i in self.get_col_lastdocs(self.col_terraria, limit):
+                    string_date = i["date"].strftime("%d/%m/%y %H:%M")
+                    if i["status"]:
+                        status = _("On")
+                    else:
+                        status = _("Off")
+                    text = _("[%s] (%s) Server is %s (%s) ") % ( string_date,i["user"],status,i["ip"])
+                    bot.sendMessage(chat_id=update.message.chat_id, text=text)
             elif command_args[1] == "autonot" or command_args[1] == "a":
                 bot.sendMessage(chat_id=update.message.chat_id, text=_("placeholder autonot text"))
             elif command_args[1] == "ip" or command_args[1] == "i":
-                ip_text = self.terraria_current_ip if self.terraria_current_ip else _("There is no IP")
+                last_ip = self.get_col_lastest(self.col_terraria)["ip"]
+                ip_text = last_ip if last_ip else _("There is no IP")
                 bot.sendMessage(chat_id=update.message.chat_id, text=ip_text)
+            elif command_args[1] == "milestone" or command_args[1] == "m":
+                bot.sendMessage(chat_id=update.message.chat_id, text=_("placeholder milestone text"))
             elif command_args[1] == "on":
                 if len(command_args) > 2:
                     self.terraria_change_status(True, user, command_args[2])
@@ -183,8 +205,12 @@ class TelegramBot(object):
             bot.sendMessage(chat_id=update.message.chat_id, text="%s  -  <%s>" % (i["name"],i["text"]))
 
     def terraria_change_status(self, status, user=None, ip=None ):
-        self.terraria_current_status = status
-        self.terraria_current_host = user
-        self.terraria_current_ip =  ip
         t_update = TerrariaStatusUpdate(user, status, ip)
         self.col_terraria.insert(t_update.toDBCollection())
+
+    def get_col_lastest(self, col):
+        cursor = col.find().sort("$natural",DESCENDING).limit(1)
+        return cursor[0]
+
+    def get_col_lastdocs(self, col, amount):
+        return col.find().sort("$natural",DESCENDING).limit(amount)
