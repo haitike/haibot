@@ -1,4 +1,5 @@
 (B) (18-02-2016) (Terraria) Clean up Terraria command code
+(B) (18-02-2016) (Terraria) Fix errors (status, log, ip, etc) if Terraria Collection is empty.
 (C) (16-02-2016) (mongo) Save app language when finishing it.
 (C) (16-02-2016) (i18n) Update locale template and translation (hito). Upload the new template to the repo. Compile .mo in Both repos.
 (C) (17-02-2016) (Terraria) server_on / server_off -> pillar de ese request el user id de telegram, a traves de un parametro por get (opcional)
