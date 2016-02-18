@@ -1,13 +1,19 @@
 from flask import Flask, request
 from telegrambot.telegrambot import TelegramBot
+from pymongo import MongoClient
 import logging
 
 CONFIGFILE_PATH = "data/config.py"
 app = Flask(__name__)
 app.config.from_pyfile(CONFIGFILE_PATH) #try
-logging.basicConfig(level=logging.DEBUG)
+
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("bot_log")
-bot = TelegramBot(config=app.config,use_webhook=True)
+
+mclient = MongoClient()
+db = mclient[app.config["DB_NAME"]]
+
+bot = TelegramBot(app.config,db,use_webhook=True)
 
 @app.route("/")
 def index_test():
@@ -32,4 +38,5 @@ if __name__ == '__main__':
     try:
         app.run()
     except:
-        logger.exception("Finished program.")
+        logger.critical("Flask Application couldn't start")
+    logger.info("Finished program.")

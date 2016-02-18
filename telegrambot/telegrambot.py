@@ -15,12 +15,11 @@ def translation_install(translation): # Comnpability with both python 2 / 3
 class TelegramBot(object):
     translations = {}
     api = None
-    terraria_status = False
-    terraria_ip = None
-    terraria_host = None
 
-    def __init__(self, config,use_webhook=False):
+    def __init__(self, config, db, use_webhook=False):
         self.config = config
+        self.db = db
+        self.db_collections()
 
         #LANGUAGE STUFF
         self.language_list = os.listdir(self.config["LOCALE_DIR"])
@@ -45,6 +44,12 @@ class TelegramBot(object):
             self.dispatcher = self.updater.dispatcher
 
         self.add_handlers()
+
+    def db_collections(self):
+        self.col_terraria = self.db.terraria
+        self.col_list = self.db.list
+        self.col_data = self.db.data
+        self.col_test = self.db.test
 
     def set_webhook(self):
         s = self.api.setWebhook(self.config["WEBHOOK_URL"] + "/" + self.config["TOKEN"])
@@ -79,6 +84,9 @@ class TelegramBot(object):
         self.dispatcher.addTelegramCommandHandler("settings",self.command_settings)
         self.dispatcher.addUnknownTelegramCommandHandler(self.command_unknown)
         #self.dispatcher.addErrorHandler(self.error_handle)
+
+
+        self.dispatcher.addTelegramCommandHandler("dbtest",self.command_dbtest)
 
     def command_start(self, bot, update):
         bot.sendMessage(chat_id=update.message.chat_id, text=_("Bot was initiated. Use /help for commands."))
@@ -163,6 +171,11 @@ class TelegramBot(object):
 
     def command_unknown(self, bot, update):
         bot.sendMessage(chat_id=update.message.chat_id, text=_("%s is a unknown command. Use /help for available commands.") % (update.message.text))
+
+    def command_dbtest(self, bot, update):
+        cursor = self.col_test.find()
+        for i in cursor:
+            bot.sendMessage(chat_id=update.message.chat_id, text="%s  -  <%s>" % (i["name"],i["text"]))
 
     def terraria_set_on(self, ip=None, host="Anon"):
         self.terraria_status = True
