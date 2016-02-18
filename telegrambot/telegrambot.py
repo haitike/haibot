@@ -2,6 +2,7 @@ import gettext
 import os, sys
 import logging
 from telegram import Updater, Dispatcher, Update, Bot
+from .terraria_update import *
 
 DEFAULT_LANGUAGE = "en_EN"
 logger = logging.getLogger("bot_log")
@@ -15,6 +16,9 @@ def translation_install(translation): # Comnpability with both python 2 / 3
 class TelegramBot(object):
     translations = {}
     api = None
+    terraria_current_status = False
+    terraria_current_ip = None
+    terraria_current_host = False
 
     def __init__(self, config, db, use_webhook=False):
         self.config = config
@@ -102,6 +106,7 @@ class TelegramBot(object):
             /settings - Change bot options (language, etc.)"""))
 
     def command_terraria(self, bot, update):
+        user = update.message.from_user.first_name
         help_text = _(
             """Use one of the following commands:
             /terraria status - Server status (s)
@@ -115,9 +120,9 @@ class TelegramBot(object):
             bot.sendMessage(chat_id=update.message.chat_id, text=help_text)
         else:
             if command_args[1] == "status" or command_args[1] == "s":
-                if self.terraria_status:
+                if self.terraria_current_status:
                     bot.sendMessage(chat_id=update.message.chat_id, text=_("Terraria server is On (IP:%s) (Host:%s)") %
-                                                                          (self.terraria_ip, self.terraria_host))
+                                                                (self.terraria_current_ip, self.terraria_current_host))
                 else:
                     bot.sendMessage(chat_id=update.message.chat_id, text=_("Terraria server is Off"))
             elif command_args[1] == "log" or command_args[1] == "l":
@@ -125,19 +130,19 @@ class TelegramBot(object):
             elif command_args[1] == "autonot" or command_args[1] == "a":
                 bot.sendMessage(chat_id=update.message.chat_id, text=_("placeholder autonot text"))
             elif command_args[1] == "ip" or command_args[1] == "i":
-                ip_text = self.terraria_ip if self.terraria_ip else _("There is no IP")
+                ip_text = self.terraria_current_ip if self.terraria_current_ip else _("There is no IP")
                 bot.sendMessage(chat_id=update.message.chat_id, text=ip_text)
             elif command_args[1] == "on":
                 if len(command_args) > 2:
-                    self.terraria_set_on(host=update.message.from_user.first_name, ip=command_args[2])
+                    self.terraria_change_status(True, user, command_args[2])
                     bot.sendMessage(chat_id=update.message.chat_id, text=_("Server was set On by %s (IP:%s)") %
-                                                                          (self.terraria_host, self.terraria_ip))
+                                                                          (user, command_args[2]))
                 else:
-                    self.terraria_set_on(host=update.message.from_user.first_name)
+                    self.terraria_change_status(True, user)
                     bot.sendMessage(chat_id=update.message.chat_id, text=_("Server was set On by %s\n*You can set a IP with:"
-                                                                           " /server on <your ip>" % (self.terraria_host)))
+                                                                           " /server on <your ip>" % (user)))
             elif command_args[1] == "off":
-                self.terraria_set_off()
+                self.terraria_change_status(False, user)
                 bot.sendMessage(chat_id=update.message.chat_id, text=_("Terraria Server Status changed to Off"))
             else:
                 bot.sendMessage(chat_id=update.message.chat_id, text=help_text)
@@ -177,12 +182,9 @@ class TelegramBot(object):
         for i in cursor:
             bot.sendMessage(chat_id=update.message.chat_id, text="%s  -  <%s>" % (i["name"],i["text"]))
 
-    def terraria_set_on(self, ip=None, host="Anon"):
-        self.terraria_status = True
-        self.terraria_ip = ip
-        self.terraria_host = host
-
-    def terraria_set_off(self):
-        self.terraria_status = False
-        self.terraria_ip = None
-        self.terraria_host = None
+    def terraria_change_status(self, status, user=None, ip=None ):
+        self.terraria_current_status = status
+        self.terraria_current_host = user
+        self.terraria_current_ip =  ip
+        t_update = TerrariaStatusUpdate(user, status, ip)
+        self.col_terraria.insert(t_update.toDBCollection())
