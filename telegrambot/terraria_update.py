@@ -20,7 +20,7 @@ class TerrariaStatusUpdate(TerrariaUpdate):
         if self.status:
             return _("(%s) Terraria server is On (IP:%s)") % (self.user , self.ip)
         else:
-            return _("(%s) Terraria server is Off (IP:%s)")  % (self.user , self.ip)
+            return _("(%s) Terraria server is Off")  % (self.user)
 
 class TerrariaMilestoneUpdate(TerrariaUpdate):
     def __init__(self, user, text):
