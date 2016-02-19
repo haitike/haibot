@@ -153,7 +153,8 @@ class TelegramBot(object):
                     log_text += _("[%s] (%s) Server is %s (%s) \n") % ( string_date,i["user"],status,i["ip"])
                 bot.sendMessage(chat_id=update.message.chat_id, text=log_text)
             elif command_args[1] == "autonot" or command_args[1] == "a":
-                bot.sendMessage(chat_id=update.message.chat_id, text=str(user))
+                self.col_data.update_one({'name':"autonot"},{"$addToSet": {"users": user.id}},upsert=True)
+                bot.sendMessage(chat_id=update.message.chat_id, text=user.first_name+" was added to auto notifications.")
             elif command_args[1] == "ip" or command_args[1] == "i":
                 last_ip = self.get_col_lastest(self.col_terraria)["ip"]
                 ip_text = last_ip if last_ip else _("There is no IP")
@@ -208,6 +209,7 @@ class TelegramBot(object):
     def terraria_change_status(self, status, user=None, ip=None ):
         t_update = TerrariaStatusUpdate(user, status, ip)
         self.col_terraria.insert(t_update.toDBCollection())
+        self.terraria_autonotification(str(t_update))
 
     def get_col_lastest(self, col):
         cursor = col.find().sort("$natural",DESCENDING).limit(1)
@@ -215,3 +217,9 @@ class TelegramBot(object):
 
     def get_col_lastdocs(self, col, amount):
         return col.find().sort("$natural",DESCENDING).limit(amount)
+
+    def terraria_autonotification(self, text):
+        autonot = self.col_data.find_one( {'name':"autonot" } )
+        if autonot:
+            for i in autonot["users"]:
+                self.api.sendMessage(chat_id=145837401, text=text)
