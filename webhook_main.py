@@ -42,9 +42,3 @@ if __name__ == '__main__':
         logger.critical("Flask Application couldn't start")
     mclient.close()
     logger.info("Finished program.")
-
-    #### TEMP
-    import datetime
-    with open('testfile', 'a') as f:
-        f.write(str(datetime.datetime.now().replace(microsecond=00))+'\n')
-    #### TEMP

@@ -6,6 +6,7 @@ LANGUAGE = 'en_EN'
 TOKEN = ''
 LOCALE_DIR = 'locale'
 DB_NAME = 'telegrambot' # Name of your mongo database
+TIMEZONE = 'Europe/Madrid' #Other examples: 'US/Eastern' 'Asia/Tokyo'
 
 # FLASK
 DEBUG = False

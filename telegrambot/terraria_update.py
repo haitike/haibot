@@ -3,7 +3,7 @@ import datetime
 class TerrariaUpdate(object):
     def __init__(self, user):
         self.user = user
-        self.date = datetime.datetime.now()
+        self.date = datetime.datetime.utcnow()
         self.is_milestone = False
 
     def toDBCollection(self):

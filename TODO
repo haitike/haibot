@@ -1,11 +1,13 @@
-(B) (18-02-2016) (Terraria) Clean up Terraria command code
-(B) (18-02-2016) (Terraria) Fix errors (status, log, ip, etc) if Terraria Collection is empty.
-(C) (16-02-2016) (mongo) Save app language when finishing it.
-(C) (16-02-2016) (i18n) Update locale template and translation (hito). Upload the new template to the repo. Compile .mo in Both repos.
-(C) (17-02-2016) (Terraria) server_on / server_off -> pillar de ese request el user id de telegram, a traves de un parametro por get (opcional)
+(B) (18-02) (Terraria) Clean up Terraria command code
+(C) (18-02) (mongo) Save app language when finishing it.
+(C) (18-02) (i18n) Update locale template and translation (hito). Upload the new template to the repo. Compile .mo in Both repos.
+(C) (17-02) (Terraria) server_on / server_off -> pillar de ese request el user id de telegram, a traves de un parametro por get (opcional)
 asi el bot sabe quien ha iniciado el server y lo dice. Si la otra persona lo intenta iniciar, le puede notificar a ambos que están "colisionando".
-(C) (17-02-2016) (Terraria) Si el servidor está ON y se le manda otro ON, mostrar un error en la web y en el autonot.
-(D) (16-02-2016) (log) add more logging messages to logger.
-(E) (17-02-2016) (flask) obtener ip mas universal: no siempre te vendrá declarada en el X-Forw.. Leer ambas y tomar decisiones segun si vienen definidas o no. hay mas cabeceras que los proxies pueden usar para notificar la ip, no solo esa.
-(E) (17-02-2016) (Terraria) on/off solo para usuarios en el whitelist.
-(F) (18-02-2016) (config) ???? Volver a configparser y quitar el flask_config_class?
+(C) (17-02) (Terraria) Si el servidor está ON y se le manda otro ON, mostrar un error en la web y en el autonot.
+(D) (16-02) (log) add more logging messages to logger.
+(D) (18-02) (Terraria) Toogle may accept On/Off instead of Toogle.
+(D) (19-02) (Terraria) Terraria Update Class -> fix UTC "manual" thing. (pytz?)
+(E) (17-02) (flask) obtener ip mas universal: no siempre te vendrá declarada en el X-Forw.. Leer ambas y tomar decisiones segun si vienen definidas o no. hay mas cabeceras que los proxies pueden usar para notificar la ip, no solo esa.
+(E) (17-02) (Terraria) on/off solo para usuarios en el whitelist.
+(E) (18-02) (Terraria) Fix errors (status, log, ip, etc) if Terraria Collection is empty.
+(F) (18-02) (config) ???? Volver a configparser y quitar el flask_config_class?
