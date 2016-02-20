@@ -1,18 +1,14 @@
-Working List:
-- Terraria autonot (toogle)
-- Terraria autonot (On/Off)
-- Send User to web url!
-- Autonot, register group or user ????
-
 TODO:
-(B) (18-02) (Terraria) Clean up Terraria command code
+(*) Send User to web url
+(A) (20-02) (Terraria) Mejorar comportamiento entre confirmaciones y autonots pareciendo duplicados.
+(A) (20-02) (Terraria) Autonot, register group or user ????
+(B) (19-02) (Terraria) Terraria Agent Class (Method example: << bot.sendMessage(chat_id=update.message.chat_id, text=str(self.terraria_last_update)) >>
 (C) (17-02) (Terraria) server_on / server_off -> pillar de ese request el user id de telegram, a traves de un parametro por get (opcional)
 asi el bot sabe quien ha iniciado el server y lo dice. Si la otra persona lo intenta iniciar, le puede notificar a ambos que están "colisionando".
 (C) (17-02) (Terraria) Si el servidor está ON y se le manda otro ON, mostrar un error en la web y en el autonot.
 (C) (18-02) (mongo) Save app language when finishing it.
 (C) (18-02) (i18n) Update locale template and translation (hito). Upload the new template to the repo. Compile .mo in Both repos.
 (C) (19-02) (i18n) Multiple files i18n (Ex: terraria_update)
-(C) (19-02) (Terraria) Terraria Agent Class (Method example: << bot.sendMessage(chat_id=update.message.chat_id, text=str(self.terraria_last_update)) >>
 (D) (16-02) (log) add more logging messages to logger.
 (D) (18-02) (Terraria) Toogle may accept On/Off instead of Toogle.
 (D) (19-02) (Terraria) Terraria Update Class -> fix UTC "manual" thing. (pytz?)

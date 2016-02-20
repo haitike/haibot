@@ -156,21 +156,22 @@ class TelegramBot(object):
                 bot.sendMessage(chat_id=update.message.chat_id, text=log_text)
 
             elif command_args[1] == "autonot" or command_args[1] == "a":
-                turnon = True
-                if len(command_args) > 2:
-                    if command_args[2] == "on": turnon = True
-                    elif command_args[2] == "off": turnon = False
-                    else:
-                        bot.sendMessage(chat_id=update.message.chat_id, text="/terraria autonot\n"
-                                                                             "/terraria autonot on/off")
-                else:
-                    pass
-                if turnon:
+                def autonot_on():
                     self.col_data.update_one({'name':"autonot"},{"$addToSet": {"users": user.id}},upsert=True)
                     bot.sendMessage(chat_id=update.message.chat_id, text=user.first_name+_(" was added to auto notifications."))
-                else:
+                def autonot_off():
                     self.col_data.update_one({'name':"autonot"},{"$pull": {"users": user.id}},upsert=True)
                     bot.sendMessage(chat_id=update.message.chat_id, text=user.first_name+_(" was removed from auto notifications."))
+
+                if len(command_args) > 2:
+                    if command_args[2] == "on": autonot_on()
+                    elif command_args[2] == "off": autonot_off()
+                    else: bot.sendMessage(chat_id=update.message.chat_id, text="/terraria autonot\n"
+                                                                               "/terraria autonot on/off")
+                else:
+                    autonot = self.col_data.find_one( {'name':"autonot" } )
+                    if user.id in autonot["users"]: autonot_off()
+                    else: autonot_on()
 
             elif command_args[1] == "ip" or command_args[1] == "i":
                 last_ip = self.terraria_last_status_update.ip
@@ -249,7 +250,7 @@ class TelegramBot(object):
                 try:
                     self.api.sendMessage(chat_id=i, text=text)
                 except TelegramError as e:
-                    logger.warning("TelegramError: %s" % (e))
+                    logger.warning("Terraria Autonot to User [%d]: TelegramError: %s" % (i,e))
 
     def get_col_lastdocs(self, col, amount, query=None):
         return col.find(query).sort("$natural",DESCENDING).limit(amount)
