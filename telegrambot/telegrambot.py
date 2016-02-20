@@ -3,6 +3,7 @@ import os, sys
 import logging
 import pytz
 from telegram import Updater, Dispatcher, Update, Bot
+from telegram.error import *
 from .terraria_update import *
 from pytz import timezone
 
@@ -245,6 +246,10 @@ class TelegramBot(object):
         autonot = self.col_data.find_one( {'name':"autonot" } )
         if autonot:
             for i in autonot["users"]:
-                self.api.sendMessage(chat_id=i, text=text)
+                try:
+                    self.api.sendMessage(chat_id=i, text=text)
+                except TelegramError as e:
+                    logger.warning("TelegramError: %s" % (e))
+
     def get_col_lastdocs(self, col, amount, query=None):
         return col.find(query).sort("$natural",DESCENDING).limit(amount)
