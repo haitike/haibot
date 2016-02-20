@@ -9,14 +9,13 @@ class TerrariaUpdate(object):
     def toDBCollection(self):
         return vars(self)
 
-
 class TerrariaStatusUpdate(TerrariaUpdate):
     def __init__(self, user, status, ip):
         super(TerrariaStatusUpdate, self).__init__(user)
         self.status = status
         self.ip = ip
 
-    def __str__(self):
+    def text(self):
         if self.status:
             return _("(%s) Terraria server is On (IP:%s)") % (self.user , self.ip)
         else:
@@ -28,5 +27,5 @@ class TerrariaMilestoneUpdate(TerrariaUpdate):
         self.milestone_text = text
         self.is_milestone = True
 
-    def __str__(self):
-        return "(%s) Milestone: %s" % (self.user , self.milestone_text)
+    def text(self):
+        return _("(%s) Milestone: %s") % (self.user , self.milestone_text)

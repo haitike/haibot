@@ -103,8 +103,8 @@ class TelegramBot(object):
             /start - Iniciciate or Restart the bot
             /help - Show the command list.
             /terraria status/log/autonot/ip - Terraria options
-            /list <option> <item> - Manage your lists.
-            /search <engine> <word> - Search using a engine.
+            /list option item - Manage your lists.
+            /search engine word - Search using a engine.
             /settings - Change bot options (language, etc.)"""))
 
     def command_terraria(self, bot, update):
@@ -113,7 +113,7 @@ class TelegramBot(object):
             """Use one of the following commands:
             /terraria status - Server status (s)
             /terraria log <number> - Show Server history (l)
-            /terraria autonot - Toogle Autonotifications to user (a)
+            /terraria autonot <on/off> - Toogle Autonotifications to user (a)
             /terraria ip - Display server IP (i)
             /terraria milestone - Add a milestone to server (m)
             /terraria on/off manually change server status""")
@@ -122,7 +122,7 @@ class TelegramBot(object):
             bot.sendMessage(chat_id=update.message.chat_id, text=help_text)
         else:
             if command_args[1] == "status" or command_args[1] == "s":
-                bot.sendMessage(chat_id=update.message.chat_id, text=str(self.terraria_last_status_update))
+                bot.sendMessage(chat_id=update.message.chat_id, text=self.terraria_last_status_update.text())
 
             elif command_args[1] == "log" or command_args[1] == "l":
                 query = None
@@ -155,8 +155,21 @@ class TelegramBot(object):
                 bot.sendMessage(chat_id=update.message.chat_id, text=log_text)
 
             elif command_args[1] == "autonot" or command_args[1] == "a":
-                self.col_data.update_one({'name':"autonot"},{"$addToSet": {"users": user.id}},upsert=True)
-                bot.sendMessage(chat_id=update.message.chat_id, text=user.first_name+" was added to auto notifications.")
+                turnon = True
+                if len(command_args) > 2:
+                    if command_args[2] == "on": turnon = True
+                    elif command_args[2] == "off": turnon = False
+                    else:
+                        bot.sendMessage(chat_id=update.message.chat_id, text="/terraria autonot\n"
+                                                                             "/terraria autonot on/off")
+                else:
+                    pass
+                if turnon:
+                    self.col_data.update_one({'name':"autonot"},{"$addToSet": {"users": user.id}},upsert=True)
+                    bot.sendMessage(chat_id=update.message.chat_id, text=user.first_name+_(" was added to auto notifications."))
+                else:
+                    self.col_data.update_one({'name':"autonot"},{"$pull": {"users": user.id}},upsert=True)
+                    bot.sendMessage(chat_id=update.message.chat_id, text=user.first_name+_(" was removed from auto notifications."))
 
             elif command_args[1] == "ip" or command_args[1] == "i":
                 last_ip = self.terraria_last_status_update.ip
@@ -166,7 +179,7 @@ class TelegramBot(object):
             elif command_args[1] == "milestone" or command_args[1] == "m":
                 if len(command_args) > 2:
                     milestone = self.terraria_add_milestone(user.first_name, " ".join(command_args[2:]))
-                    bot.sendMessage(chat_id=update.message.chat_id, text=str(milestone))
+                    bot.sendMessage(chat_id=update.message.chat_id, text=milestone.text())
                 else:
                     bot.sendMessage(chat_id=update.message.chat_id, text=_("Use /terraria milestone <TEXT>"))
 
@@ -177,20 +190,20 @@ class TelegramBot(object):
                     self.terraria_change_status(True, user.first_name)
                     bot.sendMessage(chat_id=update.message.chat_id, text=_("Note: You can set a IP with:"
                                                                            " /server on <your ip>" ))
-                bot.sendMessage(chat_id=update.message.chat_id, text=str(self.terraria_last_status_update))
+                bot.sendMessage(chat_id=update.message.chat_id, text=self.terraria_last_status_update.text())
 
             elif command_args[1] == "off":
                 self.terraria_change_status(False, user.first_name)
-                bot.sendMessage(chat_id=update.message.chat_id, text=str(self.terraria_last_status_update))
+                bot.sendMessage(chat_id=update.message.chat_id, text=self.terraria_last_status_update.text())
 
             else:
                 bot.sendMessage(chat_id=update.message.chat_id, text=help_text)
 
     def command_list(self, bot, update):
-        bot.sendMessage(chat_id=update.message.chat_id, text=_("/list <option> <item>"))
+        bot.sendMessage(chat_id=update.message.chat_id, text=_("/list option item"))
 
     def command_search(self, bot, update):
-        bot.sendMessage(chat_id=update.message.chat_id, text=_("/search <engine> <word>"))
+        bot.sendMessage(chat_id=update.message.chat_id, text=_("/search engine word"))
 
     def command_settings(self, bot,update):
         languages_codes_text = _("Language codes:\n")
@@ -219,13 +232,13 @@ class TelegramBot(object):
     def terraria_change_status(self, status, user=None, ip=None ):
         t_update = TerrariaStatusUpdate(user, status, ip)
         self.col_terraria.insert(t_update.toDBCollection())
-        self.terraria_autonotification(str(t_update))
+        self.terraria_autonotification(t_update.text())
         self.terraria_last_status_update = t_update
 
     def terraria_add_milestone(self, user=None, text=" " ):
         t_update = TerrariaMilestoneUpdate(user, text)
         self.col_terraria.insert(t_update.toDBCollection())
-        self.terraria_autonotification(str(t_update))
+        self.terraria_autonotification(t_update.text())
         return t_update
 
     def terraria_autonotification(self, text):
@@ -233,6 +246,5 @@ class TelegramBot(object):
         if autonot:
             for i in autonot["users"]:
                 self.api.sendMessage(chat_id=i, text=text)
-
     def get_col_lastdocs(self, col, amount, query=None):
         return col.find(query).sort("$natural",DESCENDING).limit(amount)
