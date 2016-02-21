@@ -21,7 +21,7 @@ def translation_install(translation): # Comnpability with both python 2 / 3
 
 class TelegramBot(object):
     translations = {}
-    api = None
+    bot = None
 
     def __init__(self, config, db, use_webhook=False):
         self.config = config
@@ -40,11 +40,11 @@ class TelegramBot(object):
         except:
             translation_install(self.translations[DEFAULT_LANGUAGE])
 
-        # API INICIALIZATION
-        self.api = Bot(token=self.config["TOKEN"])  #try
+        # bot INICIALIZATION
+        self.bot = Bot(token=self.config["TOKEN"])  #try
         if use_webhook:
             self.set_webhook()
-            self.dispatcher = Dispatcher(self.api,None)
+            self.dispatcher = Dispatcher(self.bot,None)
         else:
             self.disable_webhook()
             self.updater = Updater(token=self.config["TOKEN"])
@@ -53,8 +53,11 @@ class TelegramBot(object):
         self.add_handlers()
 
         # DB get STUFF
-        update = self.get_col_lastdocs(self.col_terraria, 1, query={"is_milestone" : False})[0]
-        self.terraria_last_status_update = TerrariaStatusUpdate(update["user"],update["status"], update["ip"])
+        try:
+            update = self.get_col_lastdocs(self.col_terraria, 1, query={"is_milestone" : False})[0]
+            self.terraria_last_status_update = TerrariaStatusUpdate(update["user"],update["status"], update["ip"])
+        except:
+            self.terraria_last_status_update = TerrariaStatusUpdate(None, False, None)
 
     def db_collections(self):
         self.col_terraria = self.db.terraria
@@ -62,7 +65,7 @@ class TelegramBot(object):
         self.col_data = self.db.data
 
     def set_webhook(self):
-        s = self.api.setWebhook(self.config["WEBHOOK_URL"] + "/" + self.config["TOKEN"])
+        s = self.bot.setWebhook(self.config["WEBHOOK_URL"] + "/" + self.config["TOKEN"])
         if s:
             logger.info("webhook setup worked")
         else:
@@ -70,7 +73,7 @@ class TelegramBot(object):
         return s
 
     def disable_webhook(self):
-        s = self.api.setWebhook("")
+        s = self.bot.setWebhook("")
         if s:
             logger.info("webhook was disabled")
         else:
@@ -143,17 +146,21 @@ class TelegramBot(object):
                                 "/terraria log <number> - Number of log entries to show\n"
                                 "/terraria log m - Show only milestones"))
 
-                for i in self.get_col_lastdocs(self.col_terraria, limit, query):
-                    date = pytz.utc.localize(i["date"]).astimezone(tzinfo)
-                    string_date = date.strftime("%d/%m/%y %H:%M")
-                    if i["is_milestone"]:
-                        log_text += _("[%s] (%s) Milestone: %s\n" % (string_date,i["user"],i["milestone_text"]))
-                    else:
-                        if i["status"]:
-                            log_text += _("[%s] (%s) Terraria Server is On (IP:%s) \n") % ( string_date,i["user"],i["ip"])
+                try:
+                    log_list = self.get_col_lastdocs(self.col_terraria, limit, query)
+                    for i in log_list:
+                        date = pytz.utc.localize(i["date"]).astimezone(tzinfo)
+                        string_date = date.strftime("%d/%m/%y %H:%M")
+                        if i["is_milestone"]:
+                            log_text += _("[%s] (%s) Milestone: %s\n" % (string_date,i["user"],i["milestone_text"]))
                         else:
-                            log_text += _("[%s] (%s) Terraria Server is Off\n") % ( string_date,i["user"])
-                bot.sendMessage(chat_id=update.message.chat_id, text=log_text)
+                            if i["status"]:
+                                log_text += _("[%s] (%s) Terraria Server is On (IP:%s) \n") % ( string_date,i["user"],i["ip"])
+                            else:
+                                log_text += _("[%s] (%s) Terraria Server is Off\n") % ( string_date,i["user"])
+                    bot.sendMessage(chat_id=update.message.chat_id, text=log_text)
+                except:
+                    bot.sendMessage(chat_id=update.message.chat_id, text=_("There is no Log History"))
 
             elif command_args[1] == "autonot" or command_args[1] == "a":
                 def autonot_on():
@@ -164,14 +171,22 @@ class TelegramBot(object):
                     bot.sendMessage(chat_id=update.message.chat_id, text=user.first_name+_(" was removed from auto notifications."))
 
                 if len(command_args) > 2:
-                    if command_args[2] == "on": autonot_on()
-                    elif command_args[2] == "off": autonot_off()
+                    if command_args[2] == "on":
+                        autonot_on()
+                    elif command_args[2] == "off":
+                        autonot_off()
                     else: bot.sendMessage(chat_id=update.message.chat_id, text="/terraria autonot\n"
                                                                                "/terraria autonot on/off")
                 else:
                     autonot = self.col_data.find_one( {'name':"autonot" } )
-                    if user.id in autonot["users"]: autonot_off()
-                    else: autonot_on()
+                    try:
+                        if user.id in autonot["users"]:
+                            autonot_off()
+                        else:
+                            autonot_on()
+                    except:
+                        autonot_on()
+
 
             elif command_args[1] == "ip" or command_args[1] == "i":
                 last_ip = self.terraria_last_status_update.ip
@@ -248,7 +263,7 @@ class TelegramBot(object):
         if autonot:
             for i in autonot["users"]:
                 try:
-                    self.api.sendMessage(chat_id=i, text=text)
+                    self.bot.sendMessage(chat_id=i, text=text)
                 except TelegramError as e:
                     logger.warning("Terraria Autonot to User [%d]: TelegramError: %s" % (i,e))
 
