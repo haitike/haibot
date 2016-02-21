@@ -1,2 +1,0 @@
-class TerrariaAgent(object):
-    pass

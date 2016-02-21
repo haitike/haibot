@@ -1,17 +1,12 @@
 import gettext
 import os, sys
 import logging
-import pytz
 from telegram import Updater, Dispatcher, Update, Bot
 from telegram.error import *
-from .terraria_update import *
-from pytz import timezone
+from .terraria import *
 
 DEFAULT_LANGUAGE = "en_EN"
 logger = logging.getLogger("bot_log")
-
-ASCENDING = 1
-DESCENDING = -1
 
 def translation_install(translation): # Comnpability with both python 2 / 3
     kwargs = {}
@@ -25,8 +20,8 @@ class TelegramBot(object):
 
     def __init__(self, config, db, use_webhook=False):
         self.config = config
-        self.db = db
-        self.db_collections()
+        self.collection = db.bot_data
+        self.terraria = Terraria(db)
 
         #LANGUAGE STUFF
         self.language_list = os.listdir(self.config["LOCALE_DIR"])
@@ -51,18 +46,6 @@ class TelegramBot(object):
             self.dispatcher = self.updater.dispatcher
 
         self.add_handlers()
-
-        # DB get STUFF
-        try:
-            update = self.get_col_lastdocs(self.col_terraria, 1, query={"is_milestone" : False})[0]
-            self.terraria_last_status_update = TerrariaStatusUpdate(update["user"],update["status"], update["ip"])
-        except:
-            self.terraria_last_status_update = TerrariaStatusUpdate(None, False, None)
-
-    def db_collections(self):
-        self.col_terraria = self.db.terraria
-        self.col_list = self.db.list
-        self.col_data = self.db.data
 
     def set_webhook(self):
         s = self.bot.setWebhook(self.config["WEBHOOK_URL"] + "/" + self.config["TOKEN"])
@@ -112,7 +95,7 @@ class TelegramBot(object):
             /settings - Change bot options (language, etc.)"""))
 
     def command_terraria(self, bot, update):
-        user = update.message.from_user
+        sender = update.message.from_user
         help_text = _(
             """Use one of the following commands:
             /terraria status - Server status (s)
@@ -126,91 +109,48 @@ class TelegramBot(object):
             bot.sendMessage(chat_id=update.message.chat_id, text=help_text)
         else:
             if command_args[1] == "status" or command_args[1] == "s":
-                bot.sendMessage(chat_id=update.message.chat_id, text=self.terraria_last_status_update.text())
+                self.bot_message(update.message.chat_id, self.terraria.get_status())
 
             elif command_args[1] == "log" or command_args[1] == "l":
-                query = None
-                limit = 5
-                log_text = ""
-                try: tzinfo = timezone(self.config["TIMEZONE"])
-                except: tzinfo = pytz.utc
-
                 if len(command_args) > 2:
                     try:
-                        limit = int(command_args[2])
+                        log_text = self.terraria.get_log(int(command_args[2]))
                     except:
                         if command_args[2] == "m":
-                            query = {"is_milestone" : True}
+                            log_text = self.terraria.get_log(5, only_milestone=True)
                         else:
-                            bot.sendMessage(chat_id=update.message.chat_id, text=_(
-                                "/terraria log <number> - Number of log entries to show\n"
-                                "/terraria log m - Show only milestones"))
-
-                try:
-                    log_list = self.get_col_lastdocs(self.col_terraria, limit, query)
-                    for i in log_list:
-                        date = pytz.utc.localize(i["date"]).astimezone(tzinfo)
-                        string_date = date.strftime("%d/%m/%y %H:%M")
-                        if i["is_milestone"]:
-                            log_text += _("[%s] (%s) Milestone: %s\n" % (string_date,i["user"],i["milestone_text"]))
-                        else:
-                            if i["status"]:
-                                log_text += _("[%s] (%s) Terraria Server is On (IP:%s) \n") % ( string_date,i["user"],i["ip"])
-                            else:
-                                log_text += _("[%s] (%s) Terraria Server is Off\n") % ( string_date,i["user"])
-                    bot.sendMessage(chat_id=update.message.chat_id, text=log_text)
-                except:
-                    bot.sendMessage(chat_id=update.message.chat_id, text=_("There is no Log History"))
+                            log_text = _("/terraria log <number> - Number of log entries to show\n"
+                                         "/terraria log m - Show only milestones")
+                else:
+                    log_text = self.terraria.get_log(5)
+                self.bot_message(update.message.chat_id, log_text)
 
             elif command_args[1] == "autonot" or command_args[1] == "a":
-                def autonot_on():
-                    self.col_data.update_one({'name':"autonot"},{"$addToSet": {"users": user.id}},upsert=True)
-                    bot.sendMessage(chat_id=update.message.chat_id, text=user.first_name+_(" was added to auto notifications."))
-                def autonot_off():
-                    self.col_data.update_one({'name':"autonot"},{"$pull": {"users": user.id}},upsert=True)
-                    bot.sendMessage(chat_id=update.message.chat_id, text=user.first_name+_(" was removed from auto notifications."))
-
-                if len(command_args) > 2:
-                    if command_args[2] == "on":
-                        autonot_on()
-                    elif command_args[2] == "off":
-                        autonot_off()
-                    else: bot.sendMessage(chat_id=update.message.chat_id, text="/terraria autonot\n"
-                                                                               "/terraria autonot on/off")
-                else:
-                    autonot = self.col_data.find_one( {'name':"autonot" } )
-                    try:
-                        if user.id in autonot["users"]:
-                            autonot_off()
-                        else:
-                            autonot_on()
-                    except:
-                        autonot_on()
-
+                # if command_args... blabla
+                self.terraria.get_autonot()
+                self.terraria.set_autonot()
 
             elif command_args[1] == "ip" or command_args[1] == "i":
-                last_ip = self.terraria_last_status_update.ip
-                ip_text = last_ip if last_ip else _("There is no IP")
-                bot.sendMessage(chat_id=update.message.chat_id, text=ip_text)
+                self.bot_message(update.message.chat_id, self.terraria.get_ip())
 
             elif command_args[1] == "milestone" or command_args[1] == "m":
                 if len(command_args) > 2:
-                    milestone = self.terraria_add_milestone(user.first_name, " ".join(command_args[2:]))
+                    milestone = self.terraria_add_milestone(sender.first_name, " ".join(command_args[2:]))
                     bot.sendMessage(chat_id=update.message.chat_id, text=milestone.text())
                 else:
                     bot.sendMessage(chat_id=update.message.chat_id, text=_("Use /terraria milestone <TEXT>"))
 
             elif command_args[1] == "on":
                 if len(command_args) > 2:
-                    self.terraria_change_status(True, user.first_name, command_args[2])
+                    self.terraria_change_status(True, sender.first_name, command_args[2])
                 else:
-                    self.terraria_change_status(True, user.first_name)
+                    self.terraria_change_status(True, sender.first_name)
                     bot.sendMessage(chat_id=update.message.chat_id, text=_("Note: You can set a IP with:"
                                                                            " /server on <your ip>" ))
                 bot.sendMessage(chat_id=update.message.chat_id, text=self.terraria_last_status_update.text())
 
             elif command_args[1] == "off":
-                self.terraria_change_status(False, user.first_name)
+                self.terraria_change_status(False, sender.first_name)
                 bot.sendMessage(chat_id=update.message.chat_id, text=self.terraria_last_status_update.text())
 
             else:
@@ -245,6 +185,12 @@ class TelegramBot(object):
 
     def command_unknown(self, bot, update):
         bot.sendMessage(chat_id=update.message.chat_id, text=_("%s is a unknown command. Use /help for available commands.") % (update.message.text))
+
+    def bot_message(self, chat_id, text):
+        try:
+            self.bot.sendMessage(chat_id=chat_id, text=text)
+        except:
+            logger.warning("A Message could not be sent:\n%s " % (text))
 
     def terraria_change_status(self, status, user=None, ip=None ):
         t_update = TerrariaStatusUpdate(user, status, ip)

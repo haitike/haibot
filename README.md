@@ -7,11 +7,16 @@ Compability:
 Requirements:
 - python-telegram-bot
 - pymongo
-- Flask (Only with webhook, not neccesary with polling)
 - pytz
+- Flask (Only with webhook, not neccesary with polling)
 
 Instructions:
 - Raname data/config-default.py to data/config.py.
 - Fill the token value (talk to BodFather in telegram). If you are going to use a webhook fill the webhook_url too.
 - Use webhook_main.py or polling_main.py as you prefer.
 - Note: The config-default.py Flask and Mongo information is prepared for OpenShift. You can change it for other hosting.
+
+Commands implemented:
+- Terraria (You can get info of a Terraria server) (You can activate/desactivate the server with the bot or with the  urls :
+    https:yourweb/token/server_on  / https:yourweb/token/server_off
+- Settings (Change bot language)
