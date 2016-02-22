@@ -14,7 +14,8 @@ mclient = MongoClient(app.config["MONGO_URL"])
 db = mclient[app.config["DB_NAME"]]
 
 bot = TelegramBot(app.config,db,use_webhook=True)
-
+bot.start_webhook_server()
+"""
 @app.route("/")
 def index_test():
     return "<strong>It's Alive!</strong>"
@@ -42,3 +43,7 @@ if __name__ == '__main__':
         logger.critical("Flask Application couldn't start")
     mclient.close()
     logger.info("Finished program.")
+"""
+
+mclient.close()
+logger.info("Finished program.")

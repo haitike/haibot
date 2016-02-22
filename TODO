@@ -1,4 +1,6 @@
 TODO:
+(*) Autonotifications to self.update_queue.push
+(*) args in Dispatcher for subcommands
 (*) Send User to web url
 (*) BUG: TelegramError: Unauthorized if user closes the bot and stuff happens. (Test: autonot in group without a chat open with bot)
          SendMessage method with try except for all the bot??
