@@ -6,7 +6,7 @@ from pytz import timezone
 class Terraria(object):
     def __init__(self,db):
         self.col_updates = db.terraria_updates
-        self.col_autonot_users = db.terraria_autonot
+        self.col_autonot = db.terraria_autonot
 
         try:
             update = get_col_lastdocs(self.col_updates, 1, query={"is_milestone" : False})[0]
@@ -15,7 +15,7 @@ class Terraria(object):
             self.last_status_update = TerrariaStatusUpdate(None, False, None)
 
     def get_status(self):
-        self.last_status_update.text()
+        return self.last_status_update.text()
 
     def get_log(self, amount, only_milestone=False):
         log_text = ""
@@ -26,7 +26,7 @@ class Terraria(object):
 
         try:
             if only_milestone:
-                log_list = get_col_lastdocs(self.col_updates, amount,{"is_milestone" : True})
+                log_list = get_col_lastdocs(self.col_updates, amount, {"is_milestone" : True})
             else:
                 log_list = get_col_lastdocs(self.col_updates, amount)
 
@@ -51,36 +51,41 @@ class Terraria(object):
         else:
             return _("There is no IP")
 
-    def get_autonot(self):
-        pass
+    def get_autonot_status(self, id):
+        autonot = self.col_autonot.find_one( {'name':"autonot" } )
+        try:
+            if id in autonot["users"]:
+                return True
+            else:
+                return False
+        except:
+            return False
 
-    def set_autonot(self):
-        def autonot_on():
-            self.col_data.update_one({'name':"autonot"},{"$addToSet": {"users": sender.id}},upsert=True)
-            bot.sendMessage(chat_id=update.message.chat_id, text=sender.first_name+_(" was added to auto notifications."))
-        def autonot_off():
-            self.col_data.update_one({'name':"autonot"},{"$pull": {"users": sender.id}},upsert=True)
-            bot.sendMessage(chat_id=update.message.chat_id, text=sender.first_name+_(" was removed from auto notifications."))
+    def set_autonot_on(self, id):
+        self.col_autonot.update_one({'name':"autonot"},{"$addToSet": {"users": id}},upsert=True)
+        return True
 
-        if len(command_args) > 2:
-            if command_args[2] == "on":
-                autonot_on()
-            elif command_args[2] == "off":
-                autonot_off()
-            else: bot.sendMessage(chat_id=update.message.chat_id, text="/terraria autonot\n"                                                                              "/terraria autonot on/off")
-        else:
-            autonot = self.col_data.find_one( {'name':"autonot" } )
-            try:
-                if sender.id in autonot["users"]:
-                    autonot_off()
-                else:
-                    autonot_on()
-            except:
-                autonot_on()
+    def set_autonot_off(self, id):
+        self.col_autonot.update_one({'name':"autonot"},{"$pull": {"users": id}},upsert=True)
+        return False
 
-    def add_milestone(self):
-        pass
-    def change_status(self):
-        pass
-    def notification(self):
-        pass
+    def add_milestone(self, user=None, text=" " ):
+        t_update = TerrariaMilestoneUpdate(user, text)
+        self.col_updates.insert(t_update.toDBCollection())
+        #self.notification(t_update.text())
+        return t_update.text()
+
+    def change_status(self, status, user=None, ip=None ):
+        t_update = TerrariaStatusUpdate(user, status, ip)
+        self.col_updates.insert(t_update.toDBCollection())
+        #self.terraria_autonotification(t_update.text())
+        self.last_status_update = t_update
+
+    def notification(self, text):
+        autonot = self.col_data.find_one( {'name':"autonot" } )
+        if autonot:
+            for i in autonot["users"]:
+                try:
+                    self.bot.sendMessage(chat_id=i, text=text)
+                except TelegramError as e:
+                    logger.warning("Terraria Autonot to User [%d]: TelegramError: %s" % (i,e))
