@@ -1,8 +1,10 @@
 import gettext
 import os, sys
 import logging
-from telegram import Updater, Dispatcher, Update, Bot
+import pytz
+from telegram import Updater, Bot
 from telegram.error import *
+from pytz import timezone
 from .terraria import *
 
 DEFAULT_LANGUAGE = "en_EN"
@@ -39,6 +41,12 @@ class TelegramBot(object):
         self.updater = Updater(token=self.config["TOKEN"])
         self.dispatcher = self.updater.dispatcher
         self.add_handlers()
+
+        # Timezone Stuff
+        try:
+            self.tzinfo = timezone(self.config["TIMEZONE"])
+        except:
+            self.tzinfo = pytz.utc
 
     def start_polling_loop(self):
         self.disable_webhook()
@@ -111,15 +119,15 @@ class TelegramBot(object):
             elif command_args[1] == "log" or command_args[1] == "l":
                 if len(command_args) > 2:
                     try:
-                        log_text = self.terraria.get_log(int(command_args[2]))
+                        log_text = self.terraria.get_log(int(command_args[2]), tzinfo=self.tzinfo)
                     except:
                         if command_args[2] == "m":
-                            log_text = self.terraria.get_log(5, only_milestone=True)
+                            log_text = self.terraria.get_log(5, only_milestone=True, tzinfo=self.tzinfo)
                         else:
                             log_text = _("/terraria log <number> - Number of log entries to show\n"
                                          "/terraria log m - Show only milestones")
                 else:
-                    log_text = self.terraria.get_log(5)
+                    log_text = self.terraria.get_log(5, tzinfo=self.tzinfo)
                 self.send_message(bot, update.message.chat_id, log_text)
 
             elif command_args[1] == "autonot" or command_args[1] == "a":

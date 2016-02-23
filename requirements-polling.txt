@@ -1,4 +1,0 @@
-Flask
-python-telegram-bot
-pymongo
-pytz

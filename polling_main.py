@@ -13,8 +13,8 @@ logger = logging.getLogger("bot_log")
 mclient = MongoClient(config["MONGO_URL"])
 db = mclient[config["DB_NAME"]]
 
-if __name__ == '__main__':
-    bot = TelegramBot(config, db)
-    bot.start_polling_loop()
-    mclient.close()
-    logger.info("Finished program.")
+bot = TelegramBot(config, db)
+bot.start_polling_loop()
+
+mclient.close()
+logger.info("Finished program.")

@@ -1,7 +1,6 @@
 import pytz
 from .collection_utils import get_col_lastdocs
 from .terraria_update import *
-from pytz import timezone
 
 class Terraria(object):
     def __init__(self,db):
@@ -14,22 +13,21 @@ class Terraria(object):
         except:
             self.last_status_update = TerrariaStatusUpdate(None, False, None)
 
+        self.tzinfo = pytz.utc
+
     def get_status(self):
         return self.last_status_update.text()
 
-    def get_log(self, amount, only_milestone=False):
+    def get_log(self, amount, only_milestone=False, tzinfo=pytz.utc):
         log_text = ""
-        try:
-            tzinfo = timezone(self.config["TIMEZONE"])
-        except:
-            tzinfo = pytz.utc
-
         try:
             if only_milestone:
                 log_list = get_col_lastdocs(self.col_updates, amount, {"is_milestone" : True})
             else:
                 log_list = get_col_lastdocs(self.col_updates, amount)
-
+        except:
+            return _("There is no Log History")
+        else:
             for i in log_list:
                 date = pytz.utc.localize(i["date"]).astimezone(tzinfo)
                 string_date = date.strftime("%d/%m/%y %H:%M")
@@ -40,9 +38,8 @@ class Terraria(object):
                         log_text += _("[%s] (%s) Terraria Server is On (IP:%s) \n") % ( string_date,i["user"],i["ip"])
                     else:
                         log_text += _("[%s] (%s) Terraria Server is Off\n") % ( string_date,i["user"])
-            return log_text
-        except:
-            return _("There is no Log History")
+            if log_text: return log_text
+            else: return _("There is no Log History")
 
     def get_ip(self):
         last_ip = self.last_status_update.ip

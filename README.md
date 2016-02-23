@@ -8,7 +8,6 @@ Requirements:
 - python-telegram-bot
 - pymongo
 - pytz
-- Flask (Only with webhook, not neccesary with polling)
 
 Instructions:
 - Raname data/config-default.py to data/config.py.
