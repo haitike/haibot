@@ -22,7 +22,8 @@ class TelegramBot(object):
 
     def __init__(self, config, db, use_webhook=False):
         self.config = config
-        self.collection = db.bot_data
+        self.data_collection = db.bot_data
+
         self.terraria = Terraria(db)
 
         #LANGUAGE STUFF
@@ -54,9 +55,9 @@ class TelegramBot(object):
         self.updater.idle()
 
     def start_webhook_server(self):
-        # url/token/server_on |  url/token/server_off / url/token/server_on?hostname |  url/token/server_off?hostname
+        # url/token/server_on |  url/token/server_off | url/token/server_on?hostname |  url/token/server_off?hostname
         from telegram.utils.webhookhandler import WebhookHandler
-        from .terraria_change_status_urls import do_GET
+        from .terraria_server_urls import do_GET
         WebhookHandler.do_GET = do_GET
 
         self.set_webhook()
@@ -93,6 +94,8 @@ class TelegramBot(object):
 
         self.dispatcher.addStringCommandHandler("terraria_on", self.terraria_on)
         self.dispatcher.addStringCommandHandler("terraria_off", self.terraria_off)
+        self.dispatcher.addStringCommandHandler("autonotify", self.autonotify)
+
 
     def command_start(self, bot, update):
         self.send_message(bot, update.message.chat_id, _("Bot was initiated. Use /help for commands."))
@@ -222,6 +225,9 @@ class TelegramBot(object):
             self.terraria.change_status(False, args[0])
         else:
             self.terraria.change_status(False)
+
+    def autonotify(self, bot, update, args):
+        pass
 
     def send_message(self, bot, chat_id, text):
         try:

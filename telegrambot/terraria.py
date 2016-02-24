@@ -4,11 +4,9 @@ from .terraria_update import *
 
 class Terraria(object):
     def __init__(self,db):
-        self.col_updates = db.terraria_updates
-        self.col_autonot = db.terraria_autonot
-
+        self.updates_collection = db.terraria_updates
         try:
-            update = get_col_lastdocs(self.col_updates, 1, query={"is_milestone" : False})[0]
+            update = get_col_lastdocs(self.updates_collection, 1, query={"is_milestone" : False})[0]
             self.last_status_update = TerrariaStatusUpdate(update["user"],update["status"], update["ip"])
         except:
             self.last_status_update = TerrariaStatusUpdate(None, False, None)
@@ -22,9 +20,9 @@ class Terraria(object):
         log_text = ""
         try:
             if only_milestone:
-                log_list = get_col_lastdocs(self.col_updates, amount, {"is_milestone" : True})
+                log_list = get_col_lastdocs(self.updates_collection, amount, {"is_milestone" : True})
             else:
-                log_list = get_col_lastdocs(self.col_updates, amount)
+                log_list = get_col_lastdocs(self.updates_collection, amount)
         except:
             return _("There is no Log History")
         else:
@@ -68,13 +66,13 @@ class Terraria(object):
 
     def add_milestone(self, user=None, text=" " ):
         t_update = TerrariaMilestoneUpdate(user, text)
-        self.col_updates.insert(t_update.toDBCollection())
+        self.updates_collection.insert(t_update.toDBCollection())
         #self.notification(t_update.text())
         return t_update.text()
 
     def change_status(self, status, user=None, ip=None ):
         t_update = TerrariaStatusUpdate(user, status, ip)
-        self.col_updates.insert(t_update.toDBCollection())
+        self.updates_collection.insert(t_update.toDBCollection())
         #self.terraria_autonotification(t_update.text())
         self.last_status_update = t_update
 
