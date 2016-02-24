@@ -54,6 +54,11 @@ class TelegramBot(object):
         self.updater.idle()
 
     def start_webhook_server(self):
+        # url/token/server_on |  url/token/server_off / url/token/server_on?hostname |  url/token/server_off?hostname
+        from telegram.utils.webhookhandler import WebhookHandler
+        from .terraria_change_status_urls import do_GET
+        WebhookHandler.do_GET = do_GET
+
         self.set_webhook()
         self.update_queue = self.updater.start_webhook(self.config["IP"], self.config["PORT"], self.config["TOKEN"])
         self.updater.idle()
@@ -85,6 +90,9 @@ class TelegramBot(object):
         self.dispatcher.addTelegramCommandHandler("settings",self.command_settings)
         self.dispatcher.addUnknownTelegramCommandHandler(self.command_unknown)
         #self.dispatcher.addErrorHandler(self.error_handle)
+
+        self.dispatcher.addStringCommandHandler("terraria_on", self.terraria_on)
+        self.dispatcher.addStringCommandHandler("terraria_off", self.terraria_off)
 
     def command_start(self, bot, update):
         self.send_message(bot, update.message.chat_id, _("Bot was initiated. Use /help for commands."))
@@ -202,6 +210,18 @@ class TelegramBot(object):
 
     def command_unknown(self, bot, update):
         self.send_message(bot, update.message.chat_id, _("%s is a unknown command. Use /help for available commands.") % (update.message.text))
+
+    def terraria_on(self, bot, update, args):
+        if len(args) > 1:
+            self.terraria.change_status(True, args[0], args[1])
+        else:
+            self.terraria.change_status(True)
+
+    def terraria_off(self, bot, update, args):
+        if len(args) > 0:
+            self.terraria.change_status(False, args[0])
+        else:
+            self.terraria.change_status(False)
 
     def send_message(self, bot, chat_id, text):
         try:

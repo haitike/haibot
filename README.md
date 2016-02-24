@@ -1,4 +1,4 @@
-A simple Telegram bot written in Python with some useful commands. You can run the bot using a polling loop, or with a webhook and Flask.
+A simple Telegram bot written in Python with some useful commands. You can run the bot using a polling loop or with a webhook.
 
 Compability:
 - Python 2
@@ -17,5 +17,5 @@ Instructions:
 
 Commands implemented:
 - Terraria (You can get info of a Terraria server) (You can activate/desactivate the server with the bot or with the  urls :
-    https:yourweb/token/server_on  / https:yourweb/token/server_off
+    https:yourweb/token/server_on  / https:yourweb/token/server_off / (With host name) https:yourweb/token/server_on?hostname
 - Settings (Change bot language)

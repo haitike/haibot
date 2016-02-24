@@ -1,5 +1,5 @@
 import pytz
-from .collection_utils import get_col_lastdocs
+from .utils import get_col_lastdocs
 from .terraria_update import *
 
 class Terraria(object):
