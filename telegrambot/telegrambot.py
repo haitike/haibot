@@ -2,6 +2,7 @@ import gettext
 import os, sys
 import logging
 import pytz
+from .database import Database
 from telegram import Updater, Bot
 from telegram.error import *
 from pytz import timezone
@@ -20,11 +21,10 @@ class TelegramBot(object):
     translations = {}
     bot = None
 
-    def __init__(self, config, db, use_webhook=False):
+    def __init__(self, config, use_webhook=False):
+        self.db = Database(config["MONGO_URL"], config["DB_NAME"])
         self.config = config
-        self.data_collection = db.bot_data
-
-        self.terraria = Terraria(db)
+        self.terraria = Terraria(self.db)
 
         #LANGUAGE STUFF
         self.language_list = os.listdir(self.config["LOCALE_DIR"])
@@ -175,11 +175,11 @@ class TelegramBot(object):
                 else:
                     self.terraria.change_status(True, sender.first_name)
                     self.send_message(bot, update.message.chat_id,_("Note: You can set a IP with:\n/server on <your ip>" ))
-                self.send_message(bot, update.message.chat_id, self.terraria.last_status_update.text())
+                self.send_message(bot, update.message.chat_id, self.terraria.last_status_update.get_text())
 
             elif command_args[1] == "off":
                 self.terraria.change_status(False, sender.first_name)
-                self.send_message(bot, update.message.chat_id, self.terraria.last_status_update.text())
+                self.send_message(bot, update.message.chat_id, self.terraria.last_status_update.get_text())
 
             else:
                 self.send_message(bot, update.message.chat_id, help_text)

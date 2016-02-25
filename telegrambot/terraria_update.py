@@ -1,31 +1,63 @@
-import datetime # TODO i18n multiple files
+from datetime import datetime
+# TODO i18n multiple files
 
-class TerrariaUpdate(object):
-    def __init__(self, user):
+def build_from_DB_document(document):
+    """ Method used to build Project objects from JSON data returned from MongoDB """
+    if document is not None:
+        try:
+            if not document["is_milestone"]:
+               return Status(
+                  document['user'],
+                    document['status'],
+                    document['ip'],
+                    document['date'])
+            else:
+                return Milestone(
+                    document['user'],
+                    document['milestone_text'],
+                    document['date'])
+        except KeyError as e:
+            raise Exception("Key not found in json_data: %s" % (repr(e)))
+    else:
+        raise Exception("No data to create Project from!")
+
+class Status(object):
+    def __init__(self, user, status, ip, date=datetime.utcnow()):
         self.user = user
-        self.date = datetime.datetime.utcnow()
-        self.is_milestone = False
-
-    def toDBCollection(self):
-        return vars(self)
-
-class TerrariaStatusUpdate(TerrariaUpdate):
-    def __init__(self, user, status, ip):
-        super(TerrariaStatusUpdate, self).__init__(user)
         self.status = status
         self.ip = ip
+        self.date = date
+        self.is_milestone = False
 
-    def text(self):
+    def get_text(self, with_date=False):
+        text= ""
+
+        if with_date:
+            fdate = self.date.strftime("%d/%m/%y %H:%M")
+            text+= "[%s] " % fdate
         if self.status:
-            return _("(%s) Terraria server is On (IP:%s)") % (self.user , self.ip)
+            text+= _("(%s) Terraria server is On (IP:%s)") % (self.user , self.ip)
         else:
-            return _("(%s) Terraria server is Off")  % (self.user)
+            text+= _("(%s) Terraria server is Off")  % (self.user)
 
-class TerrariaMilestoneUpdate(TerrariaUpdate):
-    def __init__(self, user, text):
-        super(TerrariaMilestoneUpdate, self).__init__(user)
+        return text
+
+    def toDBCollection(self):
+        return self.__dict__  #Equivalent to vars(object)
+
+class Milestone(object):
+    def __init__(self, user, text, date=datetime.utcnow()):
+        self.user = user
         self.milestone_text = text
+        self.date = date
         self.is_milestone = True
 
-    def text(self):
-        return _("(%s) Milestone: %s") % (self.user , self.milestone_text)
+    def get_text(self, with_date=False):
+        if with_date:
+            fdate = self.date.strftime("%d/%m/%y %H:%M")
+            return _("[%s] (%s) Milestone: %s") % (fdate, self.user , self.milestone_text)
+        else:
+            return _("(%s) Milestone: %s") % (self.user , self.milestone_text)
+
+    def toDBCollection(self):
+        return self.__dict__  #Equivalent to vars(object)

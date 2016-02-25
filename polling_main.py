@@ -1,5 +1,4 @@
 from telegrambot.telegrambot import TelegramBot
-from telegrambot.database import Database
 from telegrambot.flask_config_class import Config
 import logging
 
@@ -10,8 +9,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("bot_log")
 
 def main():
-    database = Database(config["MONGO_URL"], config["DB_NAME"])
-    bot = TelegramBot(config, db)
+    bot = TelegramBot(config)
     bot.start_polling_loop()
     logger.info("Finished program.")
 
