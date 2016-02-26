@@ -25,7 +25,7 @@ def build_from_DB_document(document):
         raise Exception("No data to create Project from!")
 
 class Status(object):
-    def __init__(self, user, status, ip, date=datetime.utcnow(), project_id=None, ):
+    def __init__(self, user, status, ip, date=datetime.utcnow(), project_id=None):
         if project_id is None:
             self._id = ObjectId()
         else:

@@ -1,6 +1,8 @@
+import urllib
+
 def do_GET(self):
     if "?" in self.path:
-        host = self.path.split("?")[1]
+        host = urllib.unquote(self.path.split("?")[1])
         self.path = self.path.split("?")[0]
     else:
         host = None

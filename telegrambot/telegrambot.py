@@ -110,7 +110,7 @@ class TelegramBot(object):
             /search engine word - Search using a engine.
             /settings - Change bot options (language, etc.)"""))
 
-    def command_terraria(self, bot, update):
+    def command_terraria(self, bot, update, args):
         sender = update.message.from_user
         help_text = _(
             """Use one of the following commands:
@@ -120,19 +120,18 @@ class TelegramBot(object):
             /terraria ip - Display server IP (i)
             /terraria milestone - Add a milestone to server (m)
             /terraria on/off manually change server status""")
-        command_args = update.message.text.split()
-        if len(command_args) < 2:
+        if len(args) < 1:
             self.send_message(bot,update.message.chat_id, help_text)
         else:
-            if command_args[1] == "status" or command_args[1] == "s":
+            if args[0] == "status" or args[0] == "s":
                 self.send_message(bot, update.message.chat_id, self.terraria.get_status())
 
-            elif command_args[1] == "log" or command_args[1] == "l":
-                if len(command_args) > 2:
+            elif args[0] == "log" or args[0] == "l":
+                if len(args) > 1:
                     try:
-                        log_text = self.terraria.get_log(int(command_args[2]), tzinfo=self.tzinfo)
+                        log_text = self.terraria.get_log(int(args[1]), tzinfo=self.tzinfo)
                     except:
-                        if command_args[2] == "m":
+                        if args[1] == "m":
                             log_text = self.terraria.get_log(5, only_milestone=True, tzinfo=self.tzinfo)
                         else:
                             log_text = _("/terraria log <number> - Number of log entries to show\n"
@@ -141,11 +140,11 @@ class TelegramBot(object):
                     log_text = self.terraria.get_log(5, tzinfo=self.tzinfo)
                 self.send_message(bot, update.message.chat_id, log_text)
 
-            elif command_args[1] == "autonot" or command_args[1] == "a":
-                if len(command_args) > 2:
-                    if command_args[2] == "on":
+            elif args[0] == "autonot" or args[0] == "a":
+                if len(args) > 1:
+                    if args[1] == "on":
                         is_autonot = self.terraria.set_autonot_on(sender.id)
-                    elif command_args[2] == "off":
+                    elif args[1] == "off":
                         is_autonot = self.terraria.set_autonot_off(sender.id)
                     else:
                         self.send_message(bot, update.message.chat_id, "/terraria autonot\n/terraria autonot on/off")
@@ -159,27 +158,27 @@ class TelegramBot(object):
                 else:
                     self.send_message(bot, update.message.chat_id, sender.first_name+_(" was removed from auto notifications."))
 
-            elif command_args[1] == "ip" or command_args[1] == "i":
+            elif args[0] == "ip" or args[0] == "i":
                 self.send_message(bot, update.message.chat_id, self.terraria.get_ip())
 
-            elif command_args[1] == "milestone" or command_args[1] == "m":
-                if len(command_args) > 2:
-                    milestone_text = self.terraria.add_milestone(sender.first_name, " ".join(command_args[2:]))
+            elif args[0] == "milestone" or args[0] == "m":
+                if len(args) > 1:
+                    milestone_text = self.terraria.add_milestone(sender.first_name, " ".join(args[2:]))
                     self.send_message(bot, update.message.chat_id, milestone_text)
                     self.autonotify(milestone_text)
                 else:
                     self.send_message(bot, update.message.chat_id,_("Use /terraria milestone <TEXT>"))
 
-            elif command_args[1] == "on":
-                if len(command_args) > 2:
-                    text = self.terraria.change_status(True, sender.first_name, command_args[2])
+            elif args[0] == "on":
+                if len(args) > 1:
+                    text = self.terraria.change_status(True, sender.first_name, args[1])
                 else:
                     text = self.terraria.change_status(True, sender.first_name)
                     self.send_message(bot, update.message.chat_id,_("Note: You can set a IP with:\n/terraria on <your ip>" ))
                 self.send_message(bot, update.message.chat_id, text)
                 self.autonotify(text)
 
-            elif command_args[1] == "off":
+            elif args[0] == "off":
                 text = self.terraria.change_status(False, sender.first_name)
                 self.send_message(bot, update.message.chat_id, self.terraria.last_status_update.get_text())
                 self.autonotify(text)
@@ -193,21 +192,20 @@ class TelegramBot(object):
     def command_search(self, bot, update):
         self.send_message(bot, update.message.chat_id, _("/search engine word"))
 
-    def command_settings(self, bot,update):
+    def command_settings(self, bot,update, args):
         languages_codes_text = _("Language codes:\n")
         for lang in self.language_list:
             languages_codes_text+= "<"+lang+"> "
 
         help_text = _("Use /settings language language_code\n\n" + languages_codes_text)
 
-        command_args = update.message.text.split()
-        if len(command_args) < 3:
+        if len(args) < 2:
             self.send_message(bot, update.message.chat_id, help_text)
         else:
-            if command_args[1] == "language" or "l":
-                if command_args[2] in self.language_list:
-                    self.send_message(bot, update.message.chat_id, _("Language changed to %s") % (command_args[2]))
-                    self.config["LANGUAGE"] =  command_args[2]
+            if args[0] == "language" or "l":
+                if args[1] in self.language_list:
+                    self.send_message(bot, update.message.chat_id, _("Language changed to %s") % (args[1]))
+                    self.config["LANGUAGE"] =  args[1]
                     translation_install(self.translations[self.config["LANGUAGE"]])
                 else:
                     self.send_message(bot, update.message.chat_id, _("Unknown language code\n\n" + languages_codes_text))
