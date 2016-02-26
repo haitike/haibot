@@ -1,18 +1,7 @@
-TODO:
-(*) BUG: TelegramError: Unauthorized if user closes the bot and stuff happens. (Test: autonot in group without a chat open with bot)
-(B) (23-02) (Terraria) Terraria Agent Class  (Ver: psutil / socket)
-(B) (18-02) (mongo) Save app language when finishing it.
-(C) (17-02) (Terraria) server_on / server_off -> pillar de ese request el user id de telegram, a traves de un parametro por get (opcional)
-asi el bot sabe quien ha iniciado el server y lo dice. Si la otra persona lo intenta iniciar, le puede notificar a ambos que están "colisionando".
-(C) (17-02) (Terraria) Si el servidor está ON y se le manda otro ON, mostrar un error en la web y en el autonot.
-(C) (18-02) (i18n) Update locale template and translation (hito). Upload the new template to the repo. Compile .mo in Both repos.
-(C) (19-02) (i18n) Multiple files i18n (Ex: terraria_update)
-(C) (20-02) (Terraria) Autonot, register group or user. Or both (terraria autonot here?)
-(D) (16-02) (log) add more logging messages to logger.
-(D) (18-02) (Terraria) Toogle may accept On/Off instead of Toogle.
-(D) (19-02) (Terraria) Terraria Update Class -> fix UTC "manual" thing. (pytz?)
-(D) (24-02) (config) Usar el config.py a pelo sin la libreria de flask, o usar configparser
-(E) (17-02) (flask) obtener ip mas universal: no siempre te vendrá declarada en el X-Forw.. Leer ambas y tomar decisiones segun si vienen definidas o no. hay mas cabeceras que los proxies pueden usar para notificar la ip, no solo esa.
-(E) (17-02) (Terraria) on/off solo para usuarios en el whitelist.
-(E) (18-02) (Terraria) Fix errors (status, log, ip, etc) if Terraria Collection is empty.
-(F) (19-02) (Terraria) Terraria log m -> Especificar numero de entradas del log?
+SMALL TODO:
+- (i18n) Update locale template and translation (hito). Upload the new template to the repo. Compile .mo in Both repos.
+- (i18n) Multiple files i18n (Ex: terraria_update)
+- (config) Usar el config.py a pelo sin flask o Configparser
+- (config) Save language config to config file when finishing (Cleaning method after the loops) [configparser?]
+
+* Issues: https://github.com/haitike/telegrambot/issues
