@@ -1,4 +1,5 @@
 from datetime import datetime
+from bson.objectid import ObjectId
 # TODO i18n multiple files
 
 def build_from_DB_document(document):
@@ -7,22 +8,28 @@ def build_from_DB_document(document):
         try:
             if not document["is_milestone"]:
                return Status(
-                  document['user'],
+                    document['user'],
                     document['status'],
                     document['ip'],
-                    document['date'])
+                    document['date'],
+                    project_id=document.get('_id', None))
             else:
                 return Milestone(
                     document['user'],
                     document['milestone_text'],
-                    document['date'])
+                    document['date'],
+                    project_id=document.get('_id', None))
         except KeyError as e:
             raise Exception("Key not found in json_data: %s" % (repr(e)))
     else:
         raise Exception("No data to create Project from!")
 
 class Status(object):
-    def __init__(self, user, status, ip, date=datetime.utcnow()):
+    def __init__(self, user, status, ip, date=datetime.utcnow(), project_id=None, ):
+        if project_id is None:
+            self._id = ObjectId()
+        else:
+            self._id = project_id
         self.user = user
         self.status = status
         self.ip = ip
@@ -46,7 +53,11 @@ class Status(object):
         return self.__dict__  #Equivalent to vars(object)
 
 class Milestone(object):
-    def __init__(self, user, text, date=datetime.utcnow()):
+    def __init__(self, user, text, date=datetime.utcnow(), project_id=None ):
+        if project_id is None:
+            self._id = ObjectId()
+        else:
+            self._id = project_id
         self.user = user
         self.milestone_text = text
         self.date = date

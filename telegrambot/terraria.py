@@ -43,41 +43,31 @@ class Terraria(object):
         else:
             return _("There is no IP")
 
-    def get_autonot_status(self, id):
-        autonot = self.col_autonot.find_one( {'name':"autonot" } )
+    def get_autonot_status(self, telegram_id):
+        autonot = self.db.read_one("data", query={'name':"autonot" })
         try:
-            if id in autonot["users"]:
+            if telegram_id in autonot["users"]:
                 return True
             else:
                 return False
         except:
             return False
 
-    def set_autonot_on(self, id):
-        self.col_autonot.update_one({'name':"autonot"},{"$addToSet": {"users": id}},upsert=True)
+    def set_autonot_on(self, telegram_id):
+        self.db.update_one_array_addtoset("data", {'name':"autonot"}, "users", telegram_id)
         return True
 
-    def set_autonot_off(self, id):
-        self.col_autonot.update_one({'name':"autonot"},{"$pull": {"users": id}},upsert=True)
+    def set_autonot_off(self, telegram_id):
+        self.db.update_one_array_pull("data", {'name':"autonot"}, "users", telegram_id)
         return False
 
     def add_milestone(self, user=None, text=" " ):
         t_update = terraria_update.Milestone(user, text)
         self.db.create("terraria_updates", t_update)
-        #self.notification(t_update.text())
         return t_update.get_text()
 
     def change_status(self, status, user=None, ip=None ):
         t_update = terraria_update.Status(user, status, ip)
         self.db.create("terraria_updates", t_update)
-        #self.terraria_autonotification(t_update.text())
         self.last_status_update = t_update
-
-    def notification(self, text):
-        autonot = self.col_data.find_one( {'name':"autonot" } )
-        if autonot:
-            for i in autonot["users"]:
-                try:
-                    self.bot.sendMessage(chat_id=i, text=text)
-                except TelegramError as e:
-                    logger.warning("Terraria Autonot to User [%d]: TelegramError: %s" % (i,e))
+        return t_update.get_text()

@@ -21,7 +21,7 @@ class TelegramBot(object):
     translations = {}
     bot = None
 
-    def __init__(self, config, use_webhook=False):
+    def __init__(self, config):
         self.db = Database(config["MONGO_URL"], config["DB_NAME"])
         self.config = config
         self.terraria = Terraria(self.db)
@@ -94,7 +94,7 @@ class TelegramBot(object):
 
         self.dispatcher.addStringCommandHandler("terraria_on", self.terraria_on)
         self.dispatcher.addStringCommandHandler("terraria_off", self.terraria_off)
-        self.dispatcher.addStringCommandHandler("autonotify", self.autonotify)
+        self.dispatcher.addStringCommandHandler("notify", self.notify)
 
 
     def command_start(self, bot, update):
@@ -166,20 +166,23 @@ class TelegramBot(object):
                 if len(command_args) > 2:
                     milestone_text = self.terraria.add_milestone(sender.first_name, " ".join(command_args[2:]))
                     self.send_message(bot, update.message.chat_id, milestone_text)
+                    self.autonotify(milestone_text)
                 else:
                     self.send_message(bot, update.message.chat_id,_("Use /terraria milestone <TEXT>"))
 
             elif command_args[1] == "on":
                 if len(command_args) > 2:
-                    self.terraria.change_status(True, sender.first_name, command_args[2])
+                    text = self.terraria.change_status(True, sender.first_name, command_args[2])
                 else:
-                    self.terraria.change_status(True, sender.first_name)
-                    self.send_message(bot, update.message.chat_id,_("Note: You can set a IP with:\n/server on <your ip>" ))
-                self.send_message(bot, update.message.chat_id, self.terraria.last_status_update.get_text())
+                    text = self.terraria.change_status(True, sender.first_name)
+                    self.send_message(bot, update.message.chat_id,_("Note: You can set a IP with:\n/terraria on <your ip>" ))
+                self.send_message(bot, update.message.chat_id, text)
+                self.autonotify(text)
 
             elif command_args[1] == "off":
-                self.terraria.change_status(False, sender.first_name)
+                text = self.terraria.change_status(False, sender.first_name)
                 self.send_message(bot, update.message.chat_id, self.terraria.last_status_update.get_text())
+                self.autonotify(text)
 
             else:
                 self.send_message(bot, update.message.chat_id, help_text)
@@ -214,23 +217,36 @@ class TelegramBot(object):
     def command_unknown(self, bot, update):
         self.send_message(bot, update.message.chat_id, _("%s is a unknown command. Use /help for available commands.") % (update.message.text))
 
+    def autonotify(self, text):
+        autonot_list = self.db.read_one( "data", query={'name':"autonot" } )
+        if autonot_list:
+            for tel_id in autonot_list["users"]:
+                text_to_queue = str("/notify %s %s" % (tel_id, text))
+                self.update_queue.put(text_to_queue)
+
     def terraria_on(self, bot, update, args):
         if len(args) > 1:
-            self.terraria.change_status(True, args[0], args[1])
+            text = self.terraria.change_status(True, args[0], args[1])
         else:
-            self.terraria.change_status(True)
+            text = self.terraria.change_status(True)
+        self.autonotify(text)
 
     def terraria_off(self, bot, update, args):
         if len(args) > 0:
-            self.terraria.change_status(False, args[0])
+            text = self.terraria.change_status(False, args[0])
         else:
-            self.terraria.change_status(False)
+            text = self.terraria.change_status(False)
+        self.autonotify(text)
 
-    def autonotify(self, bot, update, args):
-        pass
+    # Use ---> /notify ID text
+    def notify(self, bot, update, args):
+        self.send_message(bot, int(args[0]), " ".join(args[1:]))
 
     def send_message(self, bot, chat_id, text):
         try:
             bot.sendMessage(chat_id=chat_id, text=text)
+        except TelegramError as e:
+            logger.warning("Terraria Autonot to User [%d]: TelegramError: %s" % (chat_id,e))
         except:
             logger.warning("A Message could not be sent:\n%s " % (text))
+

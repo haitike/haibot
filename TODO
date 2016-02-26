@@ -1,13 +1,13 @@
 TODO:
 (*) Autonotifications to self.update_queue.push
 (*) args in Dispatcher for subcommands
-(*) Send User to web url
 (*) BUG: TelegramError: Unauthorized if user closes the bot and stuff happens. (Test: autonot in group without a chat open with bot)
          SendMessage method with try except for all the bot??
 (A) (20-02) (Terraria) Mejorar comportamiento entre confirmaciones y autonots pareciendo duplicados.
 (A) (20-02) (Terraria) Autonot, register group or user. Or both (terraria autonot here?)
 (B) (23-02) (Terraria) Terraria Agent Class  (Ver: psutil / socket)
 (B) (18-02) (mongo) Save app language when finishing it.
+(B) (26-02) (Terraria) %20 al poner espacios en el usuario e las URLs del servidor.
 (C) (17-02) (Terraria) server_on / server_off -> pillar de ese request el user id de telegram, a traves de un parametro por get (opcional)
 asi el bot sabe quien ha iniciado el server y lo dice. Si la otra persona lo intenta iniciar, le puede notificar a ambos que están "colisionando".
 (C) (17-02) (Terraria) Si el servidor está ON y se le manda otro ON, mostrar un error en la web y en el autonot.
