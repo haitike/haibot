@@ -7,8 +7,8 @@ def do_GET(self):
     else:
         host = None
     if self.path == self.server.webhook_path+"/server_on":
-        self.logger.info("Terraria Server On (%s) (%s) ( via weburl)" % (host, self.headers['X-Forwarded-For'] ))
-        self.server.update_queue.put("/terraria_on %s %s" % (host, self.headers['X-Forwarded-For'] ))
+        self.logger.info("Terraria Server On (%s) (%s) ( via weburl)" % (self.headers['X-Forwarded-For'], host ))
+        self.server.update_queue.put("/terraria_on %s %s" % (self.headers['X-Forwarded-For'], host ))
     elif self.path == self.server.webhook_path+"/server_off":
         self.logger.info("Terraria Server Off (%s) ( via weburl)" % (host))
         self.server.update_queue.put("/terraria_off %s" % (host))

@@ -163,9 +163,10 @@ class TelegramBot(object):
 
             elif args[0] == "milestone" or args[0] == "m":
                 if len(args) > 1:
-                    milestone_text = self.terraria.add_milestone(sender.first_name, " ".join(args[2:]))
-                    self.send_message(bot, update.message.chat_id, milestone_text)
-                    self.autonotify(milestone_text)
+                    milestone_text = self.terraria.add_milestone(sender.first_name, " ".join(args[1:]))
+                    is_confirmated = self.send_message(bot, update.message.chat_id, milestone_text)
+                    self.autonotify(milestone_text, check_double=is_confirmated, previous_chat_id=update.message.chat_id)
+
                 else:
                     self.send_message(bot, update.message.chat_id,_("Use /terraria milestone <TEXT>"))
 
@@ -175,13 +176,13 @@ class TelegramBot(object):
                 else:
                     text = self.terraria.change_status(True, sender.first_name)
                     self.send_message(bot, update.message.chat_id,_("Note: You can set a IP with:\n/terraria on <your ip>" ))
-                self.send_message(bot, update.message.chat_id, text)
-                self.autonotify(text)
+                is_confirmated = self.send_message(bot, update.message.chat_id, text)
+                self.autonotify(text, check_double=is_confirmated, previous_chat_id=update.message.chat_id)
 
             elif args[0] == "off":
                 text = self.terraria.change_status(False, sender.first_name)
-                self.send_message(bot, update.message.chat_id, self.terraria.last_status_update.get_text())
-                self.autonotify(text)
+                is_confirmated = self.send_message(bot, update.message.chat_id, text)
+                self.autonotify(text, check_double=is_confirmated, previous_chat_id=update.message.chat_id)
 
             else:
                 self.send_message(bot, update.message.chat_id, help_text)
@@ -215,36 +216,43 @@ class TelegramBot(object):
     def command_unknown(self, bot, update):
         self.send_message(bot, update.message.chat_id, _("%s is a unknown command. Use /help for available commands.") % (update.message.text))
 
-    def autonotify(self, text):
+    def autonotify(self, text, check_double=False, previous_chat_id=None ):
         autonot_list = self.db.read_one( "data", query={'name':"autonot" } )
         if autonot_list:
             for tel_id in autonot_list["users"]:
-                text_to_queue = str("/notify %s %s" % (tel_id, text))
-                self.update_queue.put(text_to_queue)
+                if check_double and tel_id==previous_chat_id:
+                    break
+                else:
+                    text_to_queue = str("/notify %s %s" % (tel_id, text))
+                    self.update_queue.put(text_to_queue)
 
+    # /terraria_on IP user
     def terraria_on(self, bot, update, args):
         if len(args) > 1:
-            text = self.terraria.change_status(True, args[0], args[1])
+            text = self.terraria.change_status(True, " ".join(args[1:]), args[0])
         else:
             text = self.terraria.change_status(True)
         self.autonotify(text)
 
+    # /terraria_of user
     def terraria_off(self, bot, update, args):
         if len(args) > 0:
-            text = self.terraria.change_status(False, args[0])
+            text = self.terraria.change_status(False, " ".join(args[0:]))
         else:
             text = self.terraria.change_status(False)
         self.autonotify(text)
 
-    # Use ---> /notify ID text
+    # /notify ID text
     def notify(self, bot, update, args):
         self.send_message(bot, int(args[0]), " ".join(args[1:]))
 
     def send_message(self, bot, chat_id, text):
         try:
             bot.sendMessage(chat_id=chat_id, text=text)
+            return True
         except TelegramError as e:
             logger.warning("Terraria Autonot to User [%d]: TelegramError: %s" % (chat_id,e))
+            return False
         except:
             logger.warning("A Message could not be sent:\n%s " % (text))
-
+            return False
