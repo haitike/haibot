@@ -1,14 +1,23 @@
+from __future__ import absolute_import
 import gettext
 import os, sys
 import logging
 import pytz
-from .database import Database
 from telegram import Updater, Bot
-from telegram.error import *
-from pytz import timezone
-from .terraria import *
+from telegram.error import TelegramError
+from pytz import timezone, utc
+from haibot import Database
+from haibot import Terraria
 
+try:
+    import configparser  # Python 3
+except ImportError:
+    import ConfigParser as configparser  # Python 2
+
+CONFIGFILE_PATH = "data/config.cfg"
 DEFAULT_LANGUAGE = "en_EN"
+
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("bot_log")
 
 def translation_install(translation): # Comnpability with both python 2 / 3
@@ -17,35 +26,36 @@ def translation_install(translation): # Comnpability with both python 2 / 3
         kwargs['unicode'] = True
     translation.install(**kwargs)
 
-class TelegramBot(object):
+class HaiBot(object):
     translations = {}
     bot = None
 
-    def __init__(self, config):
-        self.db = Database(config["MONGO_URL"], config["DB_NAME"])
-        self.config = config
+    def __init__(self):
+        self.config = configparser.ConfigParser()
+        self.config.read( CONFIGFILE_PATH )
+        self.db = Database(self.config.get("haibot","MONGO_URL"), self.config.get("haibot","DB_NAME"))
         self.terraria = Terraria(self.db)
 
         #LANGUAGE STUFF
-        self.language_list = os.listdir(self.config["LOCALE_DIR"])
+        self.language_list = os.listdir(self.config.get("haibot","LOCALE_DIR"))
         for l in self.language_list:
-            self.translations[l] = gettext.translation("telegrambot", self.config["LOCALE_DIR"], languages=[l], fallback=True)
+            self.translations[l] = gettext.translation("telegrambot", self.config.get("haibot","LOCALE_DIR"), languages=[l], fallback=True)
         try:
-            if self.config["LANGUAGE"] in self.language_list:
-                translation_install(self.translations[self.config["LANGUAGE"]])
+            if self.config.get("haibot","LANGUAGE") in self.language_list:
+                translation_install(self.translations[self.config.get("haibot","LANGUAGE")])
             else:
                 translation_install(self.translations[DEFAULT_LANGUAGE])
         except:
             translation_install(self.translations[DEFAULT_LANGUAGE])
 
         # bot INICIALIZATION
-        self.updater = Updater(token=self.config["TOKEN"])
+        self.updater = Updater(token=self.config.get("haibot","TOKEN"))
         self.dispatcher = self.updater.dispatcher
         self.add_handlers()
 
         # Timezone Stuff
         try:
-            self.tzinfo = timezone(self.config["TIMEZONE"])
+            self.tzinfo = timezone(self.config.get("haibot","TIMEZONE"))
         except:
             self.tzinfo = pytz.utc
 
@@ -53,6 +63,7 @@ class TelegramBot(object):
         self.disable_webhook()
         self.update_queue = self.updater.start_polling()
         self.updater.idle()
+        self.cleaning()
 
     def start_webhook_server(self):
         # url/token/server_on |  url/token/server_off | url/token/server_on?hostname |  url/token/server_off?hostname
@@ -61,12 +72,21 @@ class TelegramBot(object):
         WebhookHandler.do_GET = do_GET
 
         self.set_webhook()
-        self.update_queue = self.updater.start_webhook(self.config["IP"], self.config["PORT"], self.config["TOKEN"])
+        self.update_queue = self.updater.start_webhook(self.config.get("haibot","IP"),
+                                                       self.config.getint("haibot","PORT"),
+                                                       self.config.get("haibot","TOKEN"))
         self.updater.idle()
+        self.cleaning()
+
+    def cleaning(self):
+        # LANGUAGE SAVE
+        with open(CONFIGFILE_PATH, "w") as configfile:
+            self.config.write(configfile)
+        logger.info("Finished program.")
 
     def set_webhook(self):
-        bot = Bot(token=self.config["TOKEN"])  #try
-        s = bot.setWebhook(self.config["WEBHOOK_URL"] + "/" + self.config["TOKEN"])
+        bot = Bot(token=self.config.get("haibot","TOKEN"))  #try
+        s = bot.setWebhook(self.config.get("haibot","WEBHOOK_URL") + "/" + self.config.get("haibot","TOKEN"))
         if s:
             logger.info("webhook setup worked")
         else:
@@ -74,7 +94,7 @@ class TelegramBot(object):
         return s
 
     def disable_webhook(self):
-        bot = Bot(token=self.config["TOKEN"])  #try
+        bot = Bot(token=self.config.get("haibot","TOKEN"))  #try
         s = bot.setWebhook("")
         if s:
             logger.info("webhook was disabled")
@@ -206,8 +226,8 @@ class TelegramBot(object):
             if args[0] == "language" or "l":
                 if args[1] in self.language_list:
                     self.send_message(bot, update.message.chat_id, _("Language changed to %s") % (args[1]))
-                    self.config["LANGUAGE"] =  args[1]
-                    translation_install(self.translations[self.config["LANGUAGE"]])
+                    self.config.set("haibot","LANGUAGE", args[1] )
+                    translation_install(self.translations[self.config.get("haibot","LANGUAGE")])
                 else:
                     self.send_message(bot, update.message.chat_id, _("Unknown language code\n\n" + languages_codes_text))
             else:

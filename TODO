@@ -1,7 +1,9 @@
 SMALL TODO:
 - (i18n) Update locale template and translation (hito). Upload the new template to the repo. Compile .mo in Both repos.
 - (i18n) Multiple files i18n (Ex: terraria_update)
-- (config) Usar el config.py a pelo sin flask o Configparser
-- (config) Save language config to config file when finishing (Cleaning method after the loops) [configparser?]
+
+ORDER:
+list --> DW --> WantToPlay (Improved Terraria) --> Terraria Agent
 
 * Issues: https://github.com/haitike/telegrambot/issues
+

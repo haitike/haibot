@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 import pytz
-from telegrambot import terraria_update
+from haibot import terraria_update
 
 
 class Terraria(object):
