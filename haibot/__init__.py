@@ -1,3 +1,3 @@
 from .database import Database
 from .terraria import Terraria
-from .list_manager import ListManager
+from .lists import ListManager

@@ -79,9 +79,9 @@ class HaiBot(object):
         self.cleaning()
 
     def cleaning(self):
-        # LANGUAGE SAVE
         with open(CONFIGFILE_PATH, "w") as configfile:
             self.config.write(configfile)
+            logger.info("Saving config file...")
         logger.info("Finished program.")
 
     def set_webhook(self):
@@ -107,6 +107,7 @@ class HaiBot(object):
         self.dispatcher.addTelegramCommandHandler("help", self.command_help)
         self.dispatcher.addTelegramCommandHandler("terraria", self.command_terraria)
         self.dispatcher.addTelegramCommandHandler("list", self.command_list)
+        self.dispatcher.addTelegramCommandHandler("quote", self.command_quote)
         self.dispatcher.addTelegramCommandHandler("search", self.command_search)
         self.dispatcher.addTelegramCommandHandler("settings",self.command_settings)
         self.dispatcher.addUnknownTelegramCommandHandler(self.command_unknown)
@@ -127,6 +128,7 @@ class HaiBot(object):
             /help - Show the command list.
             /terraria status/log/autonot/ip - Terraria options
             /list option item - Manage your lists.
+            /quote - Quote special list
             /search engine word - Search using a engine.
             /settings - Change bot options (language, etc.)"""))
 
@@ -207,8 +209,47 @@ class HaiBot(object):
             else:
                 self.send_message(bot, update.message.chat_id, help_text)
 
-    def command_list(self, bot, update):
-        self.send_message(bot, update.message.chat_id, _("/list option item"))
+    def command_list(self, bot, update, args):
+        help_text = _(
+            """Use one of the following commands:
+            /list show <all:done:notdone> - show entries in the current list (s)
+            /list add - add a new entry to the current list (a)
+            /list remove - remove an entry from the current list (r)
+            /list lists <show:add:remove:clone> - manage lists (l)
+            /list use - select a list (makes the list the current list) (u)
+            /list writers <show:add:remove> - manage admins for the list (w)
+            /list readers <show:add:remove> - manage readers for the list (if apply) (re)
+            /list done - mark an entry as <done> (d)
+            /list random - pick a random entry and show it (ra)
+            /list search - show all entries matching a text (se)""")
+        if len(args) < 1:
+            self.send_message(bot, update.message.chat_id, help_text)
+        else:
+            if args[0] == "show" or args[0] == "s":
+                pass
+            elif args[0] == "add" or args[0] == "a":
+                pass
+            elif args[0] == "remove" or args[0] == "r":
+                pass
+            elif args[0] == "lists" or args[0] == "l":
+                pass
+            elif args[0] == "use" or args[0] == "u":
+                pass
+            elif args[0] == "writers" or args[0] == "w":
+                pass
+            elif args[0] == "readers" or args[0] == "re":
+                pass
+            elif args[0] == "done" or args[0] == "d":
+                pass
+            elif args[0] == "random" or args[0] == "ra":
+                pass
+            elif args[0] == "search" or args[0] == "se":
+                pass
+            else:
+                self.send_message(bot, update.message.chat_id, help_text)
+
+    def command_quote(self, bot, update):
+        self.send_message(bot, update.message.chat_id, _("QUOTE"))
 
     def command_search(self, bot, update):
         self.send_message(bot, update.message.chat_id, _("/search engine word"))
@@ -225,9 +266,14 @@ class HaiBot(object):
         else:
             if args[0] == "language" or "l":
                 if args[1] in self.language_list:
-                    self.send_message(bot, update.message.chat_id, _("Language changed to %s") % (args[1]))
-                    self.config.set("haibot","LANGUAGE", args[1] )
-                    translation_install(self.translations[self.config.get("haibot","LANGUAGE")])
+                    try:
+                        self.config.set("haibot","LANGUAGE", args[1] )
+                        translation_install(self.translations[self.config.get("haibot","LANGUAGE")])
+                        self.send_message(bot, update.message.chat_id, _("Language changed to %s") % (args[1]))
+                        logger.info("Language was changed to %s" % (args[1]))
+                    except:
+                        logger.info("A error happened changing language to %s" % (args[1]))
+
                 else:
                     self.send_message(bot, update.message.chat_id, _("Unknown language code\n\n" + languages_codes_text))
             else:

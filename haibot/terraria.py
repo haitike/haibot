@@ -1,16 +1,15 @@
 from __future__ import absolute_import
 import pytz
-from haibot import terraria_update
-
+from haibot import data_models
 
 class Terraria(object):
     def __init__(self, db):
         self.db = db
         try:
             last_update = self.db.read_last_one("terraria_updates", query={"is_milestone" : False} )
-            self.last_status_update = terraria_update.build_from_DB_document(last_update)
+            self.last_status_update = data_models.build_from_DB_document(last_update)
         except:
-            self.last_status_update = terraria_update.Status(None, False, None)
+            self.last_status_update = data_models.Status(None, False, None)
 
         self.tzinfo = pytz.utc
 
@@ -31,7 +30,7 @@ class Terraria(object):
             for log in log_list:
                 at_least_one_item = True
                 log["date"] = pytz.utc.localize(log["date"]).astimezone(tzinfo)
-                tmp_update = terraria_update.build_from_DB_document(log)
+                tmp_update = data_models.build_from_DB_document(log)
                 log_text += tmp_update.get_text(with_date=True)+"\n"
             if at_least_one_item: return log_text
             else: return _("There is no Log History")
@@ -62,12 +61,12 @@ class Terraria(object):
         return False
 
     def add_milestone(self, user=None, text=" " ):
-        t_update = terraria_update.Milestone(user, text)
+        t_update = data_models.Milestone(user, text)
         self.db.create("terraria_updates", t_update)
         return t_update.get_text()
 
     def change_status(self, status, user=None, ip=None ):
-        t_update = terraria_update.Status(user, status, ip)
+        t_update = data_models.Status(user, status, ip)
         self.db.create("terraria_updates", t_update)
         self.last_status_update = t_update
         return t_update.get_text()
