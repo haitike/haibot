@@ -6,8 +6,8 @@ import pytz
 from telegram import Updater, Bot
 from telegram.error import TelegramError
 from pytz import timezone, utc
-from haibot import Database
-from haibot import Terraria
+from haibot.database import Database
+from haibot.terraria import Terraria
 
 try:
     import configparser  # Python 3

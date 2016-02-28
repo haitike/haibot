@@ -12,7 +12,7 @@ class Database(object):
 
     def create(self, collection, document):
         if document is not None:
-            self.database[collection].insert(document.toDBCollection())
+            self.database[collection].insert(document.to_json())
         else:
             raise Exception("Nothing to save, because document parameter is None")
             logger.warning("A document could not be created in MongoDB Collection: %s" % (collection))
@@ -39,7 +39,7 @@ class Database(object):
     def update_byID(self, collection, document):
         """ Use update if the _id exists, if not use insert """
         if document is not None:
-            self.database[collection].save(document.toDBCollection())
+            self.database[collection].save(document.to_json())
         else:
             raise Exception("Nothing to update, because project parameter is None")
             logger.warning("A document could not be updated in MongoDB Collection: %s" % (collection))
@@ -53,7 +53,7 @@ class Database(object):
     def delete_byID(self, collection, document):
         """ Remove the document if _id exists"""
         if document is not None:
-            self.database[collection].remove(document.toDBCollection)
+            self.database[collection].remove(document.to_json)
         else:
             raise Exception("Nothing to delete, because project parameter is None")
             logger.warning("A document could not be deleted in MongoDB Collection: %s" % (collection))
