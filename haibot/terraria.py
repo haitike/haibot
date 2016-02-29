@@ -45,31 +45,35 @@ class Terraria(object):
         else:
             return _("There is no IP")
 
-    def get_autonot_status(self, telegram_id):
-        autonot = self.db.read_one("data", query={'name':"autonot" })
-        try:
-            if telegram_id in autonot["users"]:
-                return True
-            else:
-                return False
-        except:
+    def get_autonot(self, telegram_id):
+        user = self.db.read_one("user_data", query={'user_id':telegram_id })
+        if user:
+            return user["in_autonot"]
+        else:
             return False
 
-    def set_autonot_on(self, telegram_id):
-        self.db.update_one_array_addtoset("data", {'name':"autonot"}, "users", telegram_id)
+    def set_autonot(self, autonot, user_id, user_name):
+        self.db.update("user_data",
+                       query={"user_id":user_id, "user_name":user_name },
+                       value={"in_autonot":autonot},
+                       upsert=True)
+        return autonot
+
+    def set_autonot_on(self, user_id):
+        self.db.update_one_array_addtoset("data", {'name':"autonot"}, "users", user_id, True)
         return True
 
-    def set_autonot_off(self, telegram_id):
-        self.db.update_one_array_pull("data", {'name':"autonot"}, "users", telegram_id)
+    def set_autonot_off(self, user_id):
+        self.db.update_one_array_pull("data", {'name':"autonot"}, "users", user_id, True)
         return False
 
     def add_milestone(self, user=None, text=" " ):
         t_update = TerrariaMilestone(user, text)
-        self.db.create("terraria_updates", t_update)
+        self.db.create("terraria_updates", t_update.to_json())
         return t_update.get_update_message()
 
     def change_status(self, status, user=None, ip=None ):
         t_update = TerrariaStatus(user, status, ip)
-        self.db.create("terraria_updates", t_update)
+        self.db.create("terraria_updates", t_update.to_json())
         self.last_status_update = t_update
         return t_update.get_update_message()

@@ -3,8 +3,6 @@ import inspect
 # TODO i18n multiple files
 
 class BaseModel(object):
-    collection = None
-
     def __init__(self, id):
         self.id = id
 
@@ -26,8 +24,6 @@ class BaseModel(object):
             raise Exception("No data to create Project from!")
 
 class UserData(BaseModel):
-    collection = "data"
-
     def __init__(self, user_id, user_name, current_list=None, in_autonot=False, is_writer=False,
                  is_reader=True, is_terraria_host = False ):
         self.user_id = user_id
@@ -39,8 +35,6 @@ class UserData(BaseModel):
         self.is_terraria_host = is_terraria_host
 
 class TerrariaStatus(BaseModel):
-    collection = "terraria_updates"
-
     def __init__(self, user, status, ip, date=datetime.utcnow()):
         self.user = user
         self.status = status
@@ -62,8 +56,6 @@ class TerrariaStatus(BaseModel):
         return text
 
 class TerrariaMilestone(BaseModel):
-    collection = "terraria_updates"
-
     def __init__(self, user, milestone_text, date=datetime.utcnow()):
         self.user = user
         self.milestone_text = milestone_text

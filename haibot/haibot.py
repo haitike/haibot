@@ -165,16 +165,16 @@ class HaiBot(object):
             elif args[0] == "autonot" or args[0] == "a":
                 if len(args) > 1:
                     if args[1] == "on":
-                        is_autonot = self.terraria.set_autonot_on(sender.id)
+                        is_autonot = self.terraria.set_autonot(True, sender.id, sender.first_name)
                     elif args[1] == "off":
-                        is_autonot = self.terraria.set_autonot_off(sender.id)
+                        is_autonot = self.terraria.set_autonot(False, sender.id, sender.first_name)
                     else:
                         self.send_message(bot, update.message.chat_id, "/terraria autonot\n/terraria autonot on/off")
                 else:
-                    if self.terraria.get_autonot_status(sender.id):
-                        is_autonot = self.terraria.set_autonot_off(sender.id)
+                    if self.terraria.get_autonot(sender.id):
+                        is_autonot = self.terraria.set_autonot(False, sender.id, sender.first_name)
                     else:
-                        is_autonot = self.terraria.set_autonot_on(sender.id)
+                        is_autonot = self.terraria.set_autonot(True, sender.id, sender.first_name)
                 if is_autonot:
                     self.send_message(bot, update.message.chat_id, sender.first_name+_(" was added to auto notifications."))
                 else:
@@ -283,14 +283,13 @@ class HaiBot(object):
         self.send_message(bot, update.message.chat_id, _("%s is a unknown command. Use /help for available commands.") % (update.message.text))
 
     def autonotify(self, text, check_double=False, previous_chat_id=None ):
-        autonot_list = self.db.read_one( "data", query={'name':"autonot" } )
-        if autonot_list:
-            for tel_id in autonot_list["users"]:
-                if check_double and tel_id==previous_chat_id:
-                    break
-                else:
-                    text_to_queue = str("/notify %s %s" % (tel_id, text))
-                    self.update_queue.put(text_to_queue)
+        autonot_list = self.db.read( "user_data", query={"in_autonot":True } )
+        for user in autonot_list:
+            if check_double and user["user_id"]==previous_chat_id:
+                break
+            else:
+                text_to_queue = str("/notify %s %s" % (user["user_id"], text))
+                self.update_queue.put(text_to_queue)
 
     # /terraria_on IP user
     def terraria_on(self, bot, update, args):

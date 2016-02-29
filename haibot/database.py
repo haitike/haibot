@@ -12,7 +12,7 @@ class Database(object):
 
     def create(self, collection, document):
         if document is not None:
-            self.database[collection].insert(document.to_json())
+            self.database[collection].insert(document)
         else:
             raise Exception("Nothing to save, because document parameter is None")
             logger.warning("A document could not be created in MongoDB Collection: %s" % (collection))
@@ -36,24 +36,27 @@ class Database(object):
         cursor = self.database[collection].find(query).sort("$natural",DESCENDING).limit(1)
         return cursor[0]
 
+    def update(self, collection, query, value, upsert=False):
+        self.database[collection].update_many(query,{"$set": value},upsert=upsert)
+
     def update_byID(self, collection, document):
         """ Use update if the _id exists, if not use insert """
         if document is not None:
-            self.database[collection].save(document.to_json())
+            self.database[collection].save(document)
         else:
             raise Exception("Nothing to update, because project parameter is None")
             logger.warning("A document could not be updated in MongoDB Collection: %s" % (collection))
 
-    def update_one_array_addtoset(self, collection, query, array, data):
-        self.database[collection].update_one(query,{"$addToSet": {array: data}},upsert=True)
+    def update_one_array_addtoset(self, collection, query, array, value, upsert=False):
+        self.database[collection].update_one(query,{"$addToSet": {array: value}},upsert=upsert)
 
-    def update_one_array_pull(self, collection, query, array, data):
-        self.database[collection].update_one(query,{"$pull": {array: data}},upsert=True)
+    def update_one_array_pull(self, collection, query, array, value, upsert=False):
+        self.database[collection].update_one(query,{"$pull": {array: value}},upsert=upsert)
 
     def delete_byID(self, collection, document):
         """ Remove the document if _id exists"""
         if document is not None:
-            self.database[collection].remove(document.to_json)
+            self.database[collection].remove(document)
         else:
             raise Exception("Nothing to delete, because project parameter is None")
             logger.warning("A document could not be deleted in MongoDB Collection: %s" % (collection))
