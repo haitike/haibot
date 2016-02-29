@@ -165,16 +165,16 @@ class HaiBot(object):
             elif args[0] == "autonot" or args[0] == "a":
                 if len(args) > 1:
                     if args[1] == "on":
-                        is_autonot = self.terraria.set_autonot(True, sender.id, sender.first_name)
+                        is_autonot = self.terraria.set_autonot(True, sender.id)
                     elif args[1] == "off":
-                        is_autonot = self.terraria.set_autonot(False, sender.id, sender.first_name)
+                        is_autonot = self.terraria.set_autonot(False, sender.id)
                     else:
                         self.send_message(bot, update.message.chat_id, "/terraria autonot\n/terraria autonot on/off")
                 else:
                     if self.terraria.get_autonot(sender.id):
-                        is_autonot = self.terraria.set_autonot(False, sender.id, sender.first_name)
+                        is_autonot = self.terraria.set_autonot(False, sender.id)
                     else:
-                        is_autonot = self.terraria.set_autonot(True, sender.id, sender.first_name)
+                        is_autonot = self.terraria.set_autonot(True, sender.id)
                 if is_autonot:
                     self.send_message(bot, update.message.chat_id, sender.first_name+_(" was added to auto notifications."))
                 else:
@@ -316,7 +316,7 @@ class HaiBot(object):
             bot.sendMessage(chat_id=chat_id, text=text)
             return True
         except TelegramError as e:
-            logger.warning("Terraria Autonot to User [%d]: TelegramError: %s" % (chat_id,e))
+            logger.warning("Terraria Autonot to User (%d): TelegramError: %s" % (chat_id, e))
             return False
         except:
             logger.warning("A Message could not be sent:\n%s " % (text))

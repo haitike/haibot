@@ -52,20 +52,12 @@ class Terraria(object):
         else:
             return False
 
-    def set_autonot(self, autonot, user_id, user_name):
+    def set_autonot(self, autonot, user_id):
         self.db.update("user_data",
-                       query={"user_id":user_id, "user_name":user_name },
+                       query={"user_id":user_id},
                        value={"in_autonot":autonot},
                        upsert=True)
         return autonot
-
-    def set_autonot_on(self, user_id):
-        self.db.update_one_array_addtoset("data", {'name':"autonot"}, "users", user_id, True)
-        return True
-
-    def set_autonot_off(self, user_id):
-        self.db.update_one_array_pull("data", {'name':"autonot"}, "users", user_id, True)
-        return False
 
     def add_milestone(self, user=None, text=" " ):
         t_update = TerrariaMilestone(user, text)
