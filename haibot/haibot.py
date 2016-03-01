@@ -8,6 +8,7 @@ from telegram.error import TelegramError
 from pytz import timezone, utc
 from haibot.database import Database
 from haibot.terraria import Terraria
+from haibot.lists import ListManager
 
 try:
     import configparser  # Python 3
@@ -53,6 +54,7 @@ class HaiBot(object):
         self.db = Database(self.config.get("haibot","MONGO_URL"), self.config.get("haibot","DB_NAME"))
         self.db.create_index("user_data", "user_id")
         self.terraria = Terraria(self.db)
+        self.lists = ListManager(self.db)
 
         #LANGUAGE STUFF
         self.language_list = os.listdir(self.config.get("haibot","LOCALE_DIR"))
@@ -149,7 +151,8 @@ class HaiBot(object):
             /list option item - Manage your lists.
             /quote - Quote special list
             /search engine word - Search using a engine.
-            /settings - Change bot options (language, etc.)"""))
+            /settings - Change bot options (language, etc.)
+            /profile - Show your user profile """))
 
     @save_user
     def command_terraria(self, bot, update, args):
@@ -253,7 +256,19 @@ class HaiBot(object):
             elif args[0] == "remove" or args[0] == "r":
                 pass
             elif args[0] == "lists" or args[0] == "l":
-                pass
+                if len(args) <2:
+                    self.send_message(bot, update.message.chat_id, _("/list lists <show:add:remove:clone>"))
+                else:
+                    if args[0] == "show" or args[0] == "s":
+                        pass
+                    if args[0] == "add" or args[0] == "a":
+                        pass
+                    if args[0] == "remove" or args[0] == "r":
+                        pass
+                    if args[0] == "clone" or args[0] == "c":
+                        pass
+
+
             elif args[0] == "use" or args[0] == "u":
                 pass
             elif args[0] == "writers" or args[0] == "w":

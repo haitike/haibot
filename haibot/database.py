@@ -17,11 +17,21 @@ class Database(object):
             raise Exception("Nothing to save, because document parameter is None")
             logger.warning("A document could not be created in MongoDB Collection: %s" % (collection))
 
-    def read(self, collection, query={}, document_id=None):
+    def read(self, collection, query={}, document_id=None, desc_order=False, asc_order=False):
         if document_id is None:
-            return self.database[collection].find(query)
+            if desc_order:
+                return self.database[collection].find(query).sort("$natural",DESCENDING)
+            elif asc_order:
+                return self.database[collection].find(query).sort("$natural",ASCENDING)
+            else:
+                return self.database[collection].find(query)
         else:
-            return self.database[collection].find({"_id":document_id})
+            if desc_order:
+                return self.database[collection].find({"_id":document_id}).sort("$natural",DESCENDING)
+            elif asc_order:
+                return self.database[collection].find({"_id":document_id}).sort("$natural",ASCENDING)
+            else:
+                return self.database[collection].find({"_id":document_id})
 
     def read_one(self, collection, query={}, document_id=None):
         if document_id is None:
@@ -69,7 +79,7 @@ class Database(object):
             raise Exception("Nothing to update, because project parameter is None")
             logger.warning("A document could not be updated in MongoDB Collection: %s" % (collection))
 
-    def update_one_array_addtoset(self, collection, query, array, value, upsert=False):
+    def update_one_array_addtoset(self, collection, array, value, query={}, upsert=False):
         self.database[collection].update_one(query,{"$addToSet": {array: value}},upsert=upsert)
 
     def update_one_array_pull(self, collection, query, array, value, upsert=False):
