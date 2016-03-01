@@ -58,7 +58,7 @@ class Database(object):
         cursor = self.database[collection].find(query).sort("$natural",DESCENDING).limit(1)
         return cursor[0]
 
-    def exists_one(self, collection, query={}, document_id=None):
+    def exists_document(self, collection, query={}, document_id=None):
         if document_id is None:
             cursor = self.database[collection].find(query).limit(1)
         else:
@@ -80,10 +80,12 @@ class Database(object):
             logger.warning("A document could not be updated in MongoDB Collection: %s" % (collection))
 
     def update_one_array_addtoset(self, collection, array, value, query={}, upsert=False):
-        self.database[collection].update_one(query,{"$addToSet": {array: value}},upsert=upsert)
+        x = self.database[collection].update_one(query,{"$addToSet": {array: value}},upsert=upsert)
+        return x
 
-    def update_one_array_pull(self, collection, query, array, value, upsert=False):
-        self.database[collection].update_one(query,{"$pull": {array: value}},upsert=upsert)
+    def update_one_array_pull(self, collection, array, value, query={}, upsert=False):
+        x = self.database[collection].update_one(query,{"$pull": {array: value}},upsert=upsert)
+        return x
 
     def delete_byID(self, collection, document):
         """ Remove the document if _id exists"""

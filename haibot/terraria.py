@@ -17,26 +17,25 @@ class Terraria(object):
         return self.last_status_update.get_update_message()
 
     def get_log(self, amount, only_milestone=False, tzinfo=pytz.utc):
-        try:
-            if only_milestone:
-                log_list = self.db.read_lastXdocuments("terraria_updates", amount, {"is_milestone" : True})
-            else:
-                log_list = self.db.read_lastXdocuments("terraria_updates", amount)
-        except:
-            return _("There is no Log History")
+        if only_milestone:
+            log_list = self.db.read_lastXdocuments("terraria_updates", amount, {"is_milestone" : True})
         else:
-            log_text=""
-            at_least_one_item = False
-            for log in log_list:
-                at_least_one_item = True
-                log["date"] = pytz.utc.localize(log["date"]).astimezone(tzinfo)
-                if log["is_milestone"]:
-                    tmp_update = TerrariaMilestone.build_from_json(log)
-                else:
-                    tmp_update = TerrariaStatus.build_from_json(log)
-                log_text += tmp_update.get_update_message(with_date=True) + "\n"
-            if at_least_one_item: return log_text
-            else: return _("There is no Log History")
+            log_list = self.db.read_lastXdocuments("terraria_updates", amount)
+
+        log_text=""
+        at_least_one_item = False
+        for log in log_list:
+            at_least_one_item = True
+            log["date"] = pytz.utc.localize(log["date"]).astimezone(tzinfo)
+            if log["is_milestone"]:
+                tmp_update = TerrariaMilestone.build_from_json(log)
+            else:
+                tmp_update = TerrariaStatus.build_from_json(log)
+            log_text += tmp_update.get_update_message(with_date=True) + "\n"
+        if at_least_one_item:
+            return log_text
+        else:
+            return False
 
     def get_ip(self):
         last_ip = self.last_status_update.ip

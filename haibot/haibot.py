@@ -30,17 +30,26 @@ def translation_install(translation): # Comnpability with both python 2 / 3
 def save_user(func):
     def wrapper(self, bot, update, args):
         user = update.message.from_user
-        user_json = {
-        "user_id" : user.id,
-        "user_name" : user.name,
-        "current_list" : None,
-        "in_autonot" : False,
-        "is_writer" : False,
-        "is_reader" : True,
-        "is_terraria_host" : False }
+        if not self.db.exists_document("user_data", query={"user_id" : user.id}):
+            try:
+                if self.config.getint("haibot","BOT_OWNER") == user.id:
+                    is_owner = True
+                else:
+                    is_owner = False
+            except:
+                is_owner = False
 
-        if not self.db.exists_one("user_data", query={"user_id" : user.id}):
+            user_json = {
+            "user_id" : user.id,
+            "user_name" : user.name,
+            "current_list" : "default",
+            "in_autonot" : False,
+            "is_writer" : is_owner,
+            "is_reader" : True,
+            "is_terraria_host" : is_owner }
+
             self.db.create("user_data", user_json)
+
         return func(self,bot,update,args)
     return wrapper
 
@@ -183,7 +192,10 @@ class HaiBot(object):
                                          "/terraria log m - Show only milestones")
                 else:
                     log_text = self.terraria.get_log(5, tzinfo=self.tzinfo)
-                self.send_message(bot, update.message.chat_id, log_text)
+                if log_text:
+                    self.send_message(bot, update.message.chat_id, log_text)
+                else:
+                    self.send_message(bot, update.message.chat_id, _("There is no Log History"))
 
             elif args[0] == "autonot" or args[0] == "a":
                 if len(args) > 1:
@@ -234,55 +246,101 @@ class HaiBot(object):
 
     @save_user
     def command_list(self, bot, update, args):
-        help_text = _(
-            """Use one of the following commands:
-            /list show <all:done:notdone> - show entries in the current list (s)
-            /list add - add a new entry to the current list (a)
-            /list remove - remove an entry from the current list (r)
-            /list lists <show:add:remove:clone> - manage lists (l)
-            /list use - select a list (makes the list the current list) (u)
-            /list writers <show:add:remove> - manage admins for the list (w)
-            /list readers <show:add:remove> - manage readers for the list (if apply) (re)
-            /list done - mark an entry as <done> (d)
-            /list random - pick a random entry and show it (ra)
-            /list search - show all entries matching a text (se)""")
-        if len(args) < 1:
-            self.send_message(bot, update.message.chat_id, help_text)
+        no_writer_text = _("You have no writting rights")
+        no_reader_text = _("You have no reading rights")
+        sender = update.message.from_user
+
+        if not self.lists.isReader(sender.id):
+            self.send_message(bot, update.message.chat_id, no_reader_text)
         else:
-            if args[0] == "show" or args[0] == "s":
-                pass
-            elif args[0] == "add" or args[0] == "a":
-                pass
-            elif args[0] == "remove" or args[0] == "r":
-                pass
-            elif args[0] == "lists" or args[0] == "l":
-                if len(args) <2:
-                    self.send_message(bot, update.message.chat_id, _("/list lists <show:add:remove:clone>"))
-                else:
-                    if args[0] == "show" or args[0] == "s":
-                        pass
-                    if args[0] == "add" or args[0] == "a":
-                        pass
-                    if args[0] == "remove" or args[0] == "r":
-                        pass
-                    if args[0] == "clone" or args[0] == "c":
-                        pass
-
-
-            elif args[0] == "use" or args[0] == "u":
-                pass
-            elif args[0] == "writers" or args[0] == "w":
-                pass
-            elif args[0] == "readers" or args[0] == "re":
-                pass
-            elif args[0] == "done" or args[0] == "d":
-                pass
-            elif args[0] == "random" or args[0] == "ra":
-                pass
-            elif args[0] == "search" or args[0] == "se":
-                pass
-            else:
+            help_text = _(
+                """Use one of the following commands:
+                /list show <all:done:notdone> - show entries in the current list (s)
+                /list add - add a new entry to the current list (a)
+                /list remove - remove an entry from the current list (r)
+                /list lists <show:add:remove:clone> - manage lists (l)
+                /list use - select a list (makes the list the current list) (u)
+                /list writers <show:add:remove> - manage admins for the list (w)
+                /list readers <show:add:remove> - manage readers for the list (if apply) (re)
+                /list done - mark an entry as <done> (d)
+                /list random - pick a random entry and show it (ra)
+                /list search - show all entries matching a text (se)""")
+            if len(args) < 1:
                 self.send_message(bot, update.message.chat_id, help_text)
+            else:
+                if args[0] == "show" or args[0] == "s":
+                    pass
+                elif args[0] == "add" or args[0] == "a":
+                    pass
+                elif args[0] == "remove" or args[0] == "r":
+                    pass
+                elif args[0] == "lists" or args[0] == "l":
+                    if len(args) <2:
+                        self.send_message(bot, update.message.chat_id, _("/list lists <show:add:remove:clone>"))
+                    else:
+                        if args[1] == "show" or args[1] == "s":
+                            show_text = ""
+                            for list in self.lists.get_lists(enumerated=True):
+                                show_text += "%s: %s\n" % (str(list[0]), list[1])
+                            if show_text:
+                                self.send_message(bot, update.message.chat_id, show_text)
+                            else:
+                                self.send_message(bot, update.message.chat_id, _("There is no lists. Create one."))
+                        elif args[1] == "add" or args[1] == "a":
+                            if len(args) <3:
+                                self.send_message(bot, update.message.chat_id, _("/list lists add <something>"))
+                            else:
+                                if self.lists.isWriter(sender.id):
+                                    new_list = " ".join(args[2:])
+                                    was_modified = self.lists.add_list(new_list)
+                                    if was_modified:
+                                        self.send_message(bot, update.message.chat_id, _("\"%s\" list was created") % (new_list))
+                                    else:
+                                        self.send_message(bot, update.message.chat_id, _("\"%s\" already exists!") % (new_list))
+                                else:
+                                    self.send_message(bot, update.message.chat_id, no_writer_text)
+
+                        elif args[1] == "remove" or args[1] == "r":
+                            if len(args) <3:
+                                self.send_message(bot, update.message.chat_id, _("/list lists remove <number>"))
+                            else:
+                                if self.lists.isWriter(sender.id):
+                                    lists = self.lists.get_lists(enumerated=True)
+                                    was_removed = False
+                                    for list in lists:
+                                        try:
+                                            if list[0] == int(args[2]):
+                                                was_removed = self.lists.remove_list(list[1])
+                                                if was_removed:
+                                                    self.send_message(bot, update.message.chat_id,
+                                                            _("\"%s\" list was removed. Use \"show\" for the new order. ")%(list[1]))
+                                        except:
+                                            was_removed = False
+                                    if not was_removed:
+                                        self.send_message(bot, update.message.chat_id, _("The list could not be removed. Use:\n"
+                                                                                         "/list lists remove <list index>"))
+                                else:
+                                    self.send_message(bot, update.message.chat_id, no_writer_text)
+
+                        elif args[1] == "clone" or args[1] == "c":
+                            self.send_message(bot, update.message.chat_id, _("PLACEHOLDER Clone Text"))
+                        else:
+                            self.send_message(bot, update.message.chat_id, _("/list lists <show:add:remove:clone>"))
+
+                elif args[0] == "use" or args[0] == "u":
+                    pass
+                elif args[0] == "writers" or args[0] == "w":
+                    pass
+                elif args[0] == "readers" or args[0] == "re":
+                    pass
+                elif args[0] == "done" or args[0] == "d":
+                    pass
+                elif args[0] == "random" or args[0] == "ra":
+                    pass
+                elif args[0] == "search" or args[0] == "se":
+                    pass
+                else:
+                    self.send_message(bot, update.message.chat_id, help_text)
 
     @save_user
     def command_quote(self, bot, update, args):
