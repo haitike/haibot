@@ -26,6 +26,23 @@ def translation_install(translation): # Comnpability with both python 2 / 3
         kwargs['unicode'] = True
     translation.install(**kwargs)
 
+def save_user(func):
+    def wrapper(self, bot, update, args):
+        user = update.message.from_user
+        user_json = {
+        "user_id" : user.id,
+        "user_name" : user.name,
+        "current_list" : None,
+        "in_autonot" : False,
+        "is_writer" : False,
+        "is_reader" : True,
+        "is_terraria_host" : False }
+
+        if not self.db.exists_one("user_data", query={"user_id" : user.id}):
+            self.db.create("user_data", user_json)
+        return func(self,bot,update,args)
+    return wrapper
+
 class HaiBot(object):
     translations = {}
     bot = None
@@ -34,6 +51,7 @@ class HaiBot(object):
         self.config = configparser.ConfigParser()
         self.config.read( CONFIGFILE_PATH )
         self.db = Database(self.config.get("haibot","MONGO_URL"), self.config.get("haibot","DB_NAME"))
+        self.db.create_index("user_data", "user_id")
         self.terraria = Terraria(self.db)
 
         #LANGUAGE STUFF
@@ -110,18 +128,19 @@ class HaiBot(object):
         self.dispatcher.addTelegramCommandHandler("quote", self.command_quote)
         self.dispatcher.addTelegramCommandHandler("search", self.command_search)
         self.dispatcher.addTelegramCommandHandler("settings",self.command_settings)
+        self.dispatcher.addTelegramCommandHandler("profile",self.command_profile)
         self.dispatcher.addUnknownTelegramCommandHandler(self.command_unknown)
         #self.dispatcher.addErrorHandler(self.error_handle)
-
         self.dispatcher.addStringCommandHandler("terraria_on", self.terraria_on)
         self.dispatcher.addStringCommandHandler("terraria_off", self.terraria_off)
         self.dispatcher.addStringCommandHandler("notify", self.notify)
 
-
-    def command_start(self, bot, update):
+    @save_user
+    def command_start(self, bot, update, args):
         self.send_message(bot, update.message.chat_id, _("Bot was initiated. Use /help for commands."))
 
-    def command_help(self, bot, update):
+    @save_user
+    def command_help(self, bot, update, args):
         self.send_message(bot, update.message.chat_id, _(
             """Available Commands:
             /start - Iniciciate or Restart the bot
@@ -132,6 +151,7 @@ class HaiBot(object):
             /search engine word - Search using a engine.
             /settings - Change bot options (language, etc.)"""))
 
+    @save_user
     def command_terraria(self, bot, update, args):
         sender = update.message.from_user
         help_text = _(
@@ -176,16 +196,16 @@ class HaiBot(object):
                     else:
                         is_autonot = self.terraria.set_autonot(True, sender.id)
                 if is_autonot:
-                    self.send_message(bot, update.message.chat_id, sender.first_name+_(" was added to auto notifications."))
+                    self.send_message(bot, update.message.chat_id, sender.name+_(" was added to auto notifications."))
                 else:
-                    self.send_message(bot, update.message.chat_id, sender.first_name+_(" was removed from auto notifications."))
+                    self.send_message(bot, update.message.chat_id, sender.name+_(" was removed from auto notifications."))
 
             elif args[0] == "ip" or args[0] == "i":
                 self.send_message(bot, update.message.chat_id, self.terraria.get_ip())
 
             elif args[0] == "milestone" or args[0] == "m":
                 if len(args) > 1:
-                    milestone_text = self.terraria.add_milestone(sender.first_name, " ".join(args[1:]))
+                    milestone_text = self.terraria.add_milestone(sender.name, " ".join(args[1:]))
                     is_confirmated = self.send_message(bot, update.message.chat_id, milestone_text)
                     self.autonotify(milestone_text, check_double=is_confirmated, previous_chat_id=update.message.chat_id)
 
@@ -194,21 +214,22 @@ class HaiBot(object):
 
             elif args[0] == "on":
                 if len(args) > 1:
-                    text = self.terraria.change_status(True, sender.first_name, args[1])
+                    text = self.terraria.change_status(True, sender.name, args[1])
                 else:
-                    text = self.terraria.change_status(True, sender.first_name)
+                    text = self.terraria.change_status(True, sender.name)
                     self.send_message(bot, update.message.chat_id,_("Note: You can set a IP with:\n/terraria on <your ip>" ))
                 is_confirmated = self.send_message(bot, update.message.chat_id, text)
                 self.autonotify(text, check_double=is_confirmated, previous_chat_id=update.message.chat_id)
 
             elif args[0] == "off":
-                text = self.terraria.change_status(False, sender.first_name)
+                text = self.terraria.change_status(False, sender.name)
                 is_confirmated = self.send_message(bot, update.message.chat_id, text)
                 self.autonotify(text, check_double=is_confirmated, previous_chat_id=update.message.chat_id)
 
             else:
                 self.send_message(bot, update.message.chat_id, help_text)
 
+    @save_user
     def command_list(self, bot, update, args):
         help_text = _(
             """Use one of the following commands:
@@ -248,12 +269,15 @@ class HaiBot(object):
             else:
                 self.send_message(bot, update.message.chat_id, help_text)
 
-    def command_quote(self, bot, update):
+    @save_user
+    def command_quote(self, bot, update, args):
         self.send_message(bot, update.message.chat_id, _("QUOTE"))
 
-    def command_search(self, bot, update):
+    @save_user
+    def command_search(self, bot, update, args):
         self.send_message(bot, update.message.chat_id, _("/search engine word"))
 
+    @save_user
     def command_settings(self, bot,update, args):
         languages_codes_text = _("Language codes:\n")
         for lang in self.language_list:
@@ -264,7 +288,7 @@ class HaiBot(object):
         if len(args) < 2:
             self.send_message(bot, update.message.chat_id, help_text)
         else:
-            if args[0] == "language" or "l":
+            if args[0] == "language" or args[0] == "l":
                 if args[1] in self.language_list:
                     try:
                         self.config.set("haibot","LANGUAGE", args[1] )
@@ -279,7 +303,44 @@ class HaiBot(object):
             else:
                 self.send_message(bot, update.message.chat_id, help_text)
 
-    def command_unknown(self, bot, update):
+    @save_user
+    def command_profile(self, bot, update,args):
+        if len(args) < 1:
+            user_stuff = self.db.read_one_with_projection("user_data", query={"user_id":update.message.from_user.id},
+                                                      projection={"_id":False})
+            profile_text = ""
+            if user_stuff:
+                for i in user_stuff:
+                    profile_text += "%s = %s\n" % (str(i), str(user_stuff[i]))
+            else:
+                profile_text = _("Could not get user profile")
+        else:
+            if args[0] == "list" or args[0] == "l":
+                cursor = self.db.read_with_projection("user_data", projection={"user_id":True, "user_name":True } )
+                profile_text = ""
+                if cursor:
+                    for i in cursor:
+                        profile_text += "%s : %s\n" % (str(i["user_id"]), i["user_name"])
+                else:
+                    profile_text = _("Could not get profile list")
+            else:
+                try:
+                    profile_id = int(args[0])
+                    user_stuff = self.db.read_one_with_projection("user_data", query={"user_id":profile_id},
+                                                      projection={"_id":False})
+                    profile_text = ""
+                    if user_stuff:
+                        for i in user_stuff:
+                            profile_text += "%s = %s\n" % (str(i), str(user_stuff[i]))
+                    else:
+                        profile_text = _("Could not get profile from user <%s>") % (profile_id)
+                except:
+                        profile_text = _("Use a profile ID with only numbers")
+
+        self.send_message(bot, update.message.chat_id, profile_text)
+
+    @save_user
+    def command_unknown(self, bot, update,args):
         self.send_message(bot, update.message.chat_id, _("%s is a unknown command. Use /help for available commands.") % (update.message.text))
 
     def autonotify(self, text, check_double=False, previous_chat_id=None ):
@@ -316,7 +377,12 @@ class HaiBot(object):
             bot.sendMessage(chat_id=chat_id, text=text)
             return True
         except TelegramError as e:
-            logger.warning("Terraria Autonot to User (%d): TelegramError: %s" % (chat_id, e))
+            try:
+                user = self.db.read_one_with_projection("user_data", query={"user_id" : chat_id}, projection={"user_name":1})
+                user_name = user["user_name"]
+            except:
+                user_name = "unknown"
+            logger.warning("Terraria Autonot to User: %s [%d] (TelegramError: %s)" % (user_name, chat_id , e))
             return False
         except:
             logger.warning("A Message could not be sent:\n%s " % (text))

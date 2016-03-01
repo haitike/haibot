@@ -17,17 +17,29 @@ class Database(object):
             raise Exception("Nothing to save, because document parameter is None")
             logger.warning("A document could not be created in MongoDB Collection: %s" % (collection))
 
-    def read(self, collection, document_id=None, query={}):
+    def read(self, collection, query={}, document_id=None):
         if document_id is None:
             return self.database[collection].find(query)
         else:
             return self.database[collection].find({"_id":document_id})
 
-    def read_one(self, collection, document_id=None, query={}):
+    def read_one(self, collection, query={}, document_id=None):
         if document_id is None:
             return self.database[collection].find_one(query)
         else:
             return self.database[collection].find_one({"_id":document_id})
+
+    def read_with_projection(self, collection, projection, query={}, document_id=None ):
+        if document_id is None:
+            return self.database[collection].find(query, projection)
+        else:
+            return self.database[collection].find({"_id":document_id}, projection)
+
+    def read_one_with_projection(self, collection, projection, query={}, document_id=None ):
+        if document_id is None:
+            return self.database[collection].find_one(query, projection)
+        else:
+            return self.database[collection].find_one({"_id":document_id}, projection)
 
     def read_lastXdocuments(self, collection, amount, query={} ):
         return self.database[collection].find(query).sort("$natural",DESCENDING).limit(amount)
@@ -35,6 +47,16 @@ class Database(object):
     def read_last_one(self, collection, query={} ):
         cursor = self.database[collection].find(query).sort("$natural",DESCENDING).limit(1)
         return cursor[0]
+
+    def exists_one(self, collection, query={}, document_id=None):
+        if document_id is None:
+            cursor = self.database[collection].find(query).limit(1)
+        else:
+            cursor = self.database[collection].find({"_id":document_id}).limit(1)
+        if cursor.count() > 0:
+            return True
+        else:
+            return False
 
     def update(self, collection, query, value, upsert=False):
         self.database[collection].update_many(query,{"$set": value},upsert=upsert)
@@ -60,3 +82,9 @@ class Database(object):
         else:
             raise Exception("Nothing to delete, because project parameter is None")
             logger.warning("A document could not be deleted in MongoDB Collection: %s" % (collection))
+
+    def create_index(self, collection, key, order=None):
+        if order:
+            self.database[collection].create_index( [(key, order)] )
+        else:
+            self.database[collection].create_index( key )

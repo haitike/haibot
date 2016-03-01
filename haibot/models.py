@@ -23,17 +23,6 @@ class BaseModel(object):
         else:
             raise Exception("No data to create Project from!")
 
-class UserData(BaseModel):
-    def __init__(self, user_id, user_name, current_list=None, in_autonot=False, is_writer=False,
-                 is_reader=True, is_terraria_host = False ):
-        self.user_id = user_id
-        self.user_name = user_name
-        self.current_list = current_list
-        self.in_autonot = in_autonot
-        self.is_writer = is_writer
-        self.is_reader = is_reader
-        self.is_terraria_host = is_terraria_host
-
 class TerrariaStatus(BaseModel):
     def __init__(self, user, status, ip, date=datetime.utcnow()):
         self.user = user

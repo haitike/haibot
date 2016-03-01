@@ -55,8 +55,7 @@ class Terraria(object):
     def set_autonot(self, autonot, user_id):
         self.db.update("user_data",
                        query={"user_id":user_id},
-                       value={"in_autonot":autonot},
-                       upsert=True)
+                       value={"in_autonot":autonot})
         return autonot
 
     def add_milestone(self, user=None, text=" " ):
