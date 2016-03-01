@@ -250,7 +250,7 @@ class HaiBot(object):
         no_reader_text = _("You have no reading rights")
         sender = update.message.from_user
 
-        if not self.lists.isReader(sender.id):
+        if not self.lists.is_reader(sender.id):
             self.send_message(bot, update.message.chat_id, no_reader_text)
         else:
             help_text = _(
@@ -290,30 +290,30 @@ class HaiBot(object):
                             if len(args) <3:
                                 self.send_message(bot, update.message.chat_id, _("/list lists add <something>"))
                             else:
-                                if self.lists.isWriter(sender.id):
+                                if self.lists.is_writer(sender.id):
                                     new_list = " ".join(args[2:])
-                                    was_modified = self.lists.add_list(new_list)
-                                    if was_modified:
-                                        self.send_message(bot, update.message.chat_id, _("\"%s\" list was created") % (new_list))
-                                    else:
+                                    if self.lists.has_list(new_list):
                                         self.send_message(bot, update.message.chat_id, _("\"%s\" already exists!") % (new_list))
+                                    else:
+                                        self.lists.add_list(new_list)
+                                        self.send_message(bot, update.message.chat_id, _("\"%s\" list was created") % (new_list))
                                 else:
                                     self.send_message(bot, update.message.chat_id, no_writer_text)
 
                         elif args[1] == "remove" or args[1] == "r":
                             if len(args) <3:
-                                self.send_message(bot, update.message.chat_id, _("/list lists remove <number>"))
+                                self.send_message(bot, update.message.chat_id, _("/list lists remove <list index>"))
                             else:
-                                if self.lists.isWriter(sender.id):
+                                if self.lists.is_writer(sender.id):
                                     lists = self.lists.get_lists(enumerated=True)
                                     was_removed = False
                                     for list in lists:
                                         try:
                                             if list[0] == int(args[2]):
-                                                was_removed = self.lists.remove_list(list[1])
-                                                if was_removed:
-                                                    self.send_message(bot, update.message.chat_id,
-                                                            _("\"%s\" list was removed. Use \"show\" for the new order. ")%(list[1]))
+                                                self.lists.remove_list(list[1])
+                                                was_removed = True
+                                                self.send_message(bot, update.message.chat_id,
+                                                    _("\"%s\" list was removed. Use \"show\" for the new order. ")%(list[1]))
                                         except:
                                             was_removed = False
                                     if not was_removed:
