@@ -14,9 +14,9 @@ Instructions:
 - Fill the token value (talk to BodFather in telegram).
 - If you are going to use a webhook fill the webhook_url too and add the mongodb link of your webpage too.
 - Use webhook_main.py or polling_main.py as you prefer.
-- You can specify in data/config.cfg the bot_owner. The owner will have some permanent rights when the bot is launched,
-  like writting rights in the lists, or bestow rights to others. You must specify your telegram ID in the config.cfg. You can get
-  it launching the bot and using /profile.
+- You can specify in data/config.cfg the bot_owner. The owner will get some admin rights when he uses a command for first time.
+  Some rights are: modify the lists or bestow rights to other users.
+  You must specify your telegram ID in the config.cfg. You can get it launching the bot and using /profile.
 
 Commands implemented:
 - Terraria (You can get info of a Terraria server) (You can activate/desactivate the server with the bot or with the  urls :

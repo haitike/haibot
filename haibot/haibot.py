@@ -334,7 +334,7 @@ class HaiBot(object):
                 elif args[0] == "readers" or args[0] == "re":
                     pass
                 elif args[0] == "done" or args[0] == "d":
-                    pass
+                    "see: show done/notdone"
                 elif args[0] == "random" or args[0] == "ra":
                     pass
                 elif args[0] == "search" or args[0] == "se":
