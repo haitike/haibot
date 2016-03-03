@@ -3,7 +3,7 @@ import gettext
 import os, sys
 import logging
 import pytz
-from telegram import Updater, Bot
+from telegram import Updater
 from telegram.error import TelegramError
 from pytz import timezone, utc
 from haibot.database import Database
@@ -114,8 +114,7 @@ class HaiBot(object):
         logger.info("Finished program.")
 
     def set_webhook(self):
-        bot = Bot(token=self.config.get("haibot","TOKEN"))  #try
-        s = bot.setWebhook(self.config.get("haibot","WEBHOOK_URL") + "/" + self.config.get("haibot","TOKEN"))
+        s = self.updater.bot.setWebhook(self.config.get("haibot","WEBHOOK_URL") + "/" + self.config.get("haibot","TOKEN"))
         if s:
             logger.info("webhook setup worked")
         else:
@@ -123,8 +122,7 @@ class HaiBot(object):
         return s
 
     def disable_webhook(self):
-        bot = Bot(token=self.config.get("haibot","TOKEN"))  #try
-        s = bot.setWebhook("")
+        s = self.updater.bot.setWebhook("")
         if s:
             logger.info("webhook was disabled")
         else:
@@ -330,9 +328,114 @@ class HaiBot(object):
                 elif args[0] == "use" or args[0] == "u":
                     pass
                 elif args[0] == "writers" or args[0] == "w":
-                    pass
+                    if len(args) <2:
+                        self.send_message(bot, update.message.chat_id, _("/list writers <show:add:remove:clone>"))
+                    else:
+                        if args[1] == "show" or args[1] == "s":
+                            show_text = ""
+                            for list in self.lists.get_writers():
+                                show_text += "%s: %s\n" % (list["user_id"], list["user_name"])
+                            if show_text:
+                                self.send_message(bot, update.message.chat_id, show_text)
+                            else:
+                                self.send_message(bot, update.message.chat_id, _("There is no writers."))
+                                logger.warning("No writers. There should be one. Add bot owner to config file")
+
+                        elif args[1] == "add" or args[1] == "a":
+                            add_writers_help = _("/list writer add ID.\n Use \"/profile list\" for a list of known IDs")
+                            if len(args) <3:
+                                self.send_message(bot, update.message.chat_id, add_writers_help)
+                            else:
+                                if self.lists.is_writer(sender.id):
+                                    try:
+                                        new_writer = int(args[2])
+                                        if self.lists.user_exists(new_writer):
+                                            self.lists.add_writer(new_writer)
+                                            self.send_message(bot, update.message.chat_id, _("writer rights for (ID:%d) were added") % (new_writer))
+                                        else:
+                                            self.send_message(bot, update.message.chat_id, add_writers_help)
+                                    except:
+                                        self.send_message(bot, update.message.chat_id, add_writers_help)
+                                else:
+                                    self.send_message(bot, update.message.chat_id, no_writer_text)
+
+                        elif args[1] == "remove" or args[1] == "r":
+                            remove_writers_help = _("/list writer remove ID.\n Use \"/list writers show\" for a list of writers IDs")
+                            if len(args) <3:
+                                self.send_message(bot, update.message.chat_id, remove_writers_help)
+                            else:
+                                if self.lists.is_writer(sender.id):
+                                    try:
+                                        del_writer = int(args[2])
+                                        if self.lists.user_exists(del_writer):
+                                            if del_writer != sender.id:
+                                                self.lists.remove_writer(del_writer)
+                                                self.send_message(bot, update.message.chat_id, _("writer rights for (ID:%d) were removed") % (del_writer))
+                                            else:
+                                                self.send_message(bot, update.message.chat_id, _("You can't remove your own rights"))
+                                        else:
+                                            self.send_message(bot, update.message.chat_id, remove_writers_help)
+                                    except:
+                                        self.send_message(bot, update.message.chat_id, remove_writers_help)
+                                else:
+                                    self.send_message(bot, update.message.chat_id, no_writer_text)
+                        else:
+                            self.send_message(bot, update.message.chat_id, _("/list writers <show:add:remove>"))
+
                 elif args[0] == "readers" or args[0] == "re":
-                    pass
+                    if len(args) <2:
+                        self.send_message(bot, update.message.chat_id, _("/list readers <show:add:remove:clone>"))
+                    else:
+                        if args[1] == "show" or args[1] == "s":
+                            show_text = ""
+                            for list in self.lists.get_readers():
+                                show_text += "%s: %s\n" % (list["user_id"], list["user_name"])
+                            if show_text:
+                                self.send_message(bot, update.message.chat_id, show_text)
+                            else:
+                                self.send_message(bot, update.message.chat_id, _("There is no readers."))
+                                logger.warning("No readers. There should be one. Add bot owner to config file")
+
+                        elif args[1] == "add" or args[1] == "a":
+                            add_readers_help = _("/list reader add ID.\n Use \"/profile list\" for a list of known IDs")
+                            if len(args) <3:
+                                self.send_message(bot, update.message.chat_id, add_readers_help)
+                            else:
+                                if self.lists.is_writer(sender.id):
+                                    try:
+                                        new_reader = int(args[2])
+                                        if self.lists.user_exists(new_reader):
+                                            self.lists.add_reader(new_reader)
+                                            self.send_message(bot, update.message.chat_id, _("reader rights for (ID:%d) were added") % (new_reader))
+                                        else:
+                                            self.send_message(bot, update.message.chat_id, add_readers_help)
+                                    except:
+                                        self.send_message(bot, update.message.chat_id, add_readers_help)
+                                else:
+                                    self.send_message(bot, update.message.chat_id, no_writer_text)
+
+                        elif args[1] == "remove" or args[1] == "r":
+                            remove_readers_help = _("/list reader remove ID.\n Use \"/list readers show\" for a list of readers IDs")
+                            if len(args) <3:
+                                self.send_message(bot, update.message.chat_id, remove_readers_help)
+                            else:
+                                if self.lists.is_writer(sender.id):
+                                    try:
+                                        del_reader = int(args[2])
+                                        if self.lists.user_exists(del_reader):
+                                            if del_reader != sender.id:
+                                                self.lists.remove_reader(del_reader)
+                                                self.send_message(bot, update.message.chat_id, _("reader rights for (ID:%d) were removed") % (del_reader))
+                                            else:
+                                                self.send_message(bot, update.message.chat_id, _("You can't remove your own rights"))
+                                        else:
+                                            self.send_message(bot, update.message.chat_id, remove_readers_help)
+                                    except:
+                                        self.send_message(bot, update.message.chat_id, remove_readers_help)
+                                else:
+                                    self.send_message(bot, update.message.chat_id, no_writer_text)
+                        else:
+                            self.send_message(bot, update.message.chat_id, _("/list readers <show:add:remove>"))
                 elif args[0] == "done" or args[0] == "d":
                     "see: show done/notdone"
                 elif args[0] == "random" or args[0] == "ra":
@@ -455,7 +558,7 @@ class HaiBot(object):
                 user_name = user["user_name"]
             except:
                 user_name = "unknown"
-            logger.warning("Terraria Autonot to User: %s [%d] (TelegramError: %s)" % (user_name, chat_id , e))
+            logger.warning("A Message could not be sent to User: %s [%d] (TelegramError: %s)" % (user_name, chat_id , e))
             return False
         except:
             logger.warning("A Message could not be sent:\n%s " % (text))
