@@ -3,7 +3,7 @@ import gettext
 import os, sys
 import logging
 import pytz
-from telegram import Updater, Bot
+from telegram import Updater
 from telegram.error import TelegramError
 from pytz import timezone, utc
 from haibot.database import Database
@@ -114,8 +114,7 @@ class HaiBot(object):
         logger.info("Finished program.")
 
     def set_webhook(self):
-        bot = Bot(token=self.config.get("haibot","TOKEN"))  #try
-        s = bot.setWebhook(self.config.get("haibot","WEBHOOK_URL") + "/" + self.config.get("haibot","TOKEN"))
+        s = self.updater.bot.setWebhook(self.config.get("haibot","WEBHOOK_URL") + "/" + self.config.get("haibot","TOKEN"))
         if s:
             logger.info("webhook setup worked")
         else:
@@ -123,8 +122,7 @@ class HaiBot(object):
         return s
 
     def disable_webhook(self):
-        bot = Bot(token=self.config.get("haibot","TOKEN"))  #try
-        s = bot.setWebhook("")
+        s = self.updater.bot.setWebhook("")
         if s:
             logger.info("webhook was disabled")
         else:
@@ -455,7 +453,7 @@ class HaiBot(object):
                 user_name = user["user_name"]
             except:
                 user_name = "unknown"
-            logger.warning("Terraria Autonot to User: %s [%d] (TelegramError: %s)" % (user_name, chat_id , e))
+            logger.warning("A Message could not be sent to User: %s [%d] (TelegramError: %s)" % (user_name, chat_id , e))
             return False
         except:
             logger.warning("A Message could not be sent:\n%s " % (text))

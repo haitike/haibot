@@ -1,8 +1,11 @@
-import urllib
+try:
+    from urllib import unquote
+except:
+    from urllib.parse import unquote
 
 def do_GET(self):
     if "?" in self.path:
-        host = urllib.unquote(self.path.split("?")[1])
+        host = unquote(self.path.split("?")[1])
         self.path = self.path.split("?")[0]
     else:
         host = None
