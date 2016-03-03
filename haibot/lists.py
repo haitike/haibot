@@ -44,22 +44,26 @@ class ListManager(object):
         pass
 
     def get_readers(self):
-        pass
+        cursor = self.db.read_with_projection("user_data", query={"is_reader":True},
+                                              projection={"user_id":True, "user_name":True } )
+        return cursor
 
-    def add_reader(self):
-        pass
+    def add_reader(self, tel_id):
+        self.db.update_one("user_data", query={"user_id":tel_id}, value_dict={"is_reader":True})
 
-    def remove_reader(self):
-        pass
+    def remove_reader(self, tel_id):
+        self.db.update_one("user_data", query={"user_id":tel_id}, value_dict={"is_reader":False})
 
     def get_writers(self):
-        pass
+        cursor = self.db.read_with_projection("user_data", query={"is_writer":True},
+                                              projection={"user_id":True, "user_name":True } )
+        return cursor
 
-    def add_writer(self):
-        pass
+    def add_writer(self, tel_id):
+        self.db.update_one("user_data", query={"user_id":tel_id}, value_dict={"is_writer":True})
 
-    def remove_writer(self):
-        pass
+    def remove_writer(self, tel_id):
+        self.db.update_one("user_data", query={"user_id":tel_id}, value_dict={"is_writer":False})
 
     def is_reader(self, tel_id):
         user = self.db.read_one_with_projection("user_data", query={"user_id":tel_id}, projection={"is_reader":1 , "_id":0})
@@ -78,3 +82,6 @@ class ListManager(object):
     def has_list(self, list_name):
         if list_name in self.get_lists():
             return True
+
+    def user_exists(self, tel_id):
+        return self.db.exists_document("user_data", query={"user_id":tel_id} )

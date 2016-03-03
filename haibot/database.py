@@ -68,8 +68,11 @@ class Database(object):
         else:
             return False
 
-    def update(self, collection, query, value, upsert=False):
-        self.database[collection].update_many(query,{"$set": value},upsert=upsert)
+    def update(self, collection, query, value_dict, upsert=False):
+        self.database[collection].update_many(query,{"$set": value_dict},upsert=upsert)
+
+    def update_one(self, collection, query, value_dict, upsert=False):
+        self.database[collection].update_one(query,{"$set": value_dict},upsert=upsert)
 
     def update_byID(self, collection, document):
         """ Use update if the _id exists, if not use insert """
@@ -79,12 +82,12 @@ class Database(object):
             raise Exception("Nothing to update, because project parameter is None")
             logger.warning("A document could not be updated in MongoDB Collection: %s" % (collection))
 
-    def update_one_array_addtoset(self, collection, array, value, query={}, upsert=False):
-        x = self.database[collection].update_one(query,{"$addToSet": {array: value}},upsert=upsert)
+    def update_one_array_addtoset(self, collection, array, item, query={}, upsert=False):
+        x = self.database[collection].update_one(query,{"$addToSet": {array: item}},upsert=upsert)
         return x
 
-    def update_one_array_pull(self, collection, array, value, query={}, upsert=False):
-        x = self.database[collection].update_one(query,{"$pull": {array: value}},upsert=upsert)
+    def update_one_array_pull(self, collection, array, item, query={}, upsert=False):
+        x = self.database[collection].update_one(query,{"$pull": {array: item}},upsert=upsert)
         return x
 
     def delete_byID(self, collection, document):
