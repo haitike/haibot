@@ -255,11 +255,11 @@ class HaiBot(object):
                 """Use one of the following commands:
                 /list show <all:done:notdone> - show entries in the current list (s)
                 /list add - add a new entry to the current list (a)
-                /list remove - remove an entry from the current list (r)
-                /list lists <show:add:remove:clone> - manage lists (l)
+                /list delete - delete an entry from the current list (d)
+                /list lists <show:add:delete:clone> - manage lists (l)
                 /list use - select a list (makes the list the current list) (u)
-                /list writers <show:add:remove> - manage admins for the list (w)
-                /list readers <show:add:remove> - manage readers for the list (if apply) (re)
+                /list writers <show:add:delete> - manage admins for the list (w)
+                /list readers <show:add:delete> - manage readers for the list (if apply) (r)
                 /list done - mark an entry as <done> (d)
                 /list random - pick a random entry and show it (ra)
                 /list search - show all entries matching a text (se)""")
@@ -267,14 +267,14 @@ class HaiBot(object):
                 self.send_message(bot, update.message.chat_id, help_text)
             else:
                 if args[0] == "show" or args[0] == "s":
-                    pass
+                    self.send_message(bot, update.message.chat_id, _("NOT IMPLEMENTED"))
                 elif args[0] == "add" or args[0] == "a":
-                    pass
-                elif args[0] == "remove" or args[0] == "r":
-                    pass
+                    self.send_message(bot, update.message.chat_id, _("NOT IMPLEMENTED"))
+                elif args[0] == "delete" or args[0] == "d":
+                    self.send_message(bot, update.message.chat_id, _("NOT IMPLEMENTED"))
                 elif args[0] == "lists" or args[0] == "l":
                     if len(args) <2:
-                        self.send_message(bot, update.message.chat_id, _("/list lists <show:add:remove:clone>"))
+                        self.send_message(bot, update.message.chat_id, _("/list lists <show:add:delete:clone>"))
                     else:
                         if args[1] == "show" or args[1] == "s":
                             show_text = ""
@@ -298,38 +298,53 @@ class HaiBot(object):
                                 else:
                                     self.send_message(bot, update.message.chat_id, no_writer_text)
 
-                        elif args[1] == "remove" or args[1] == "r":
+                        elif args[1] == "delete" or args[1] == "d":
                             if len(args) <3:
-                                self.send_message(bot, update.message.chat_id, _("/list lists remove <list index>"))
+                                self.send_message(bot, update.message.chat_id, _("/list lists delete <list index>"))
                             else:
                                 if self.lists.is_writer(sender.id):
                                     lists = self.lists.get_lists(enumerated=True)
-                                    was_removed = False
+                                    was_deleted = False
                                     for list in lists:
                                         try:
                                             if list[0] == int(args[2]):
-                                                self.lists.remove_list(list[1])
-                                                was_removed = True
+                                                self.lists.delete_list(list[1])
+                                                was_deleted = True
                                                 self.send_message(bot, update.message.chat_id,
-                                                    _("\"%s\" list was removed. Use \"show\" for the new order. ")%(list[1]))
+                                                    _("\"%s\" list was deleted. Use \"show\" for the new order. ")%(list[1]))
                                         except:
-                                            was_removed = False
-                                    if not was_removed:
-                                        self.send_message(bot, update.message.chat_id, _("The list could not be removed. Use:\n"
-                                                                                         "/list lists remove <list index>"))
+                                            was_deleted = False
+                                    if not was_deleted:
+                                        self.send_message(bot, update.message.chat_id, _("The list could not be deleted. Use:\n"
+                                                                                         "/list lists delete <list index>"))
                                 else:
                                     self.send_message(bot, update.message.chat_id, no_writer_text)
 
                         elif args[1] == "clone" or args[1] == "c":
                             self.send_message(bot, update.message.chat_id, _("PLACEHOLDER Clone Text"))
                         else:
-                            self.send_message(bot, update.message.chat_id, _("/list lists <show:add:remove:clone>"))
+                            self.send_message(bot, update.message.chat_id, _("/list lists <show:add:delete:clone>"))
 
                 elif args[0] == "use" or args[0] == "u":
-                    pass
+                    if len(args) <2:
+                        self.send_message(bot, update.message.chat_id, _("/list use <list ID>\nUse /list lists show for IDs"))
+                    else:
+                        enumerated_list = self.lists.get_lists(enumerated=True)
+                        is_changed = False
+                        for list in enumerated_list:
+                            try:
+                                if list[0] == int(args[1]):
+                                    self.lists.set_current_list(sender.id, list[1])
+                                    self.send_message(bot, update.message.chat_id, _("List was changed to \"%s\"") % (list[1]) )
+                                    is_changed = True
+                            except:
+                                is_changed = False
+                        if is_changed == False:
+                            self.send_message(bot, update.message.chat_id, _("/Invalid ID. Use /list lists show") )
+
                 elif args[0] == "writers" or args[0] == "w":
                     if len(args) <2:
-                        self.send_message(bot, update.message.chat_id, _("/list writers <show:add:remove:clone>"))
+                        self.send_message(bot, update.message.chat_id, _("/list writers <show:add:delete:clone>"))
                     else:
                         if args[1] == "show" or args[1] == "s":
                             show_text = ""
@@ -359,32 +374,32 @@ class HaiBot(object):
                                 else:
                                     self.send_message(bot, update.message.chat_id, no_writer_text)
 
-                        elif args[1] == "remove" or args[1] == "r":
-                            remove_writers_help = _("/list writer remove ID.\n Use \"/list writers show\" for a list of writers IDs")
+                        elif args[1] == "delete" or args[1] == "d":
+                            delete_writers_help = _("/list writer delete ID.\n Use \"/list writers show\" for a list of writers IDs")
                             if len(args) <3:
-                                self.send_message(bot, update.message.chat_id, remove_writers_help)
+                                self.send_message(bot, update.message.chat_id, delete_writers_help)
                             else:
                                 if self.lists.is_writer(sender.id):
                                     try:
                                         del_writer = int(args[2])
                                         if self.lists.user_exists(del_writer):
                                             if del_writer != sender.id:
-                                                self.lists.remove_writer(del_writer)
-                                                self.send_message(bot, update.message.chat_id, _("writer rights for (ID:%d) were removed") % (del_writer))
+                                                self.lists.delete_writer(del_writer)
+                                                self.send_message(bot, update.message.chat_id, _("writer rights for (ID:%d) were deleted") % (del_writer))
                                             else:
-                                                self.send_message(bot, update.message.chat_id, _("You can't remove your own rights"))
+                                                self.send_message(bot, update.message.chat_id, _("You can't delete your own rights"))
                                         else:
-                                            self.send_message(bot, update.message.chat_id, remove_writers_help)
+                                            self.send_message(bot, update.message.chat_id, delete_writers_help)
                                     except:
-                                        self.send_message(bot, update.message.chat_id, remove_writers_help)
+                                        self.send_message(bot, update.message.chat_id, delete_writers_help)
                                 else:
                                     self.send_message(bot, update.message.chat_id, no_writer_text)
                         else:
-                            self.send_message(bot, update.message.chat_id, _("/list writers <show:add:remove>"))
+                            self.send_message(bot, update.message.chat_id, _("/list writers <show:add:delete>"))
 
-                elif args[0] == "readers" or args[0] == "re":
+                elif args[0] == "readers" or args[0] == "r":
                     if len(args) <2:
-                        self.send_message(bot, update.message.chat_id, _("/list readers <show:add:remove:clone>"))
+                        self.send_message(bot, update.message.chat_id, _("/list readers <show:add:delete:clone>"))
                     else:
                         if args[1] == "show" or args[1] == "s":
                             show_text = ""
@@ -414,34 +429,35 @@ class HaiBot(object):
                                 else:
                                     self.send_message(bot, update.message.chat_id, no_writer_text)
 
-                        elif args[1] == "remove" or args[1] == "r":
-                            remove_readers_help = _("/list reader remove ID.\n Use \"/list readers show\" for a list of readers IDs")
+                        elif args[1] == "delete" or args[1] == "d":
+                            delete_readers_help = _("/list reader delete ID.\n Use \"/list readers show\" for a list of readers IDs")
                             if len(args) <3:
-                                self.send_message(bot, update.message.chat_id, remove_readers_help)
+                                self.send_message(bot, update.message.chat_id, delete_readers_help)
                             else:
                                 if self.lists.is_writer(sender.id):
                                     try:
                                         del_reader = int(args[2])
                                         if self.lists.user_exists(del_reader):
                                             if del_reader != sender.id:
-                                                self.lists.remove_reader(del_reader)
-                                                self.send_message(bot, update.message.chat_id, _("reader rights for (ID:%d) were removed") % (del_reader))
+                                                self.lists.delete_reader(del_reader)
+                                                self.send_message(bot, update.message.chat_id, _("reader rights for (ID:%d) were deleted") % (del_reader))
                                             else:
-                                                self.send_message(bot, update.message.chat_id, _("You can't remove your own rights"))
+                                                self.send_message(bot, update.message.chat_id, _("You can't delete your own rights"))
                                         else:
-                                            self.send_message(bot, update.message.chat_id, remove_readers_help)
+                                            self.send_message(bot, update.message.chat_id, delete_readers_help)
                                     except:
-                                        self.send_message(bot, update.message.chat_id, remove_readers_help)
+                                        self.send_message(bot, update.message.chat_id, delete_readers_help)
                                 else:
                                     self.send_message(bot, update.message.chat_id, no_writer_text)
                         else:
-                            self.send_message(bot, update.message.chat_id, _("/list readers <show:add:remove>"))
+                            self.send_message(bot, update.message.chat_id, _("/list readers <show:add:delete>"))
                 elif args[0] == "done" or args[0] == "d":
                     "see: show done/notdone"
+                    self.send_message(bot, update.message.chat_id, _("NOT IMPLEMENTED"))
                 elif args[0] == "random" or args[0] == "ra":
-                    pass
+                    self.send_message(bot, update.message.chat_id, _("NOT IMPLEMENTED"))
                 elif args[0] == "search" or args[0] == "se":
-                    pass
+                    self.send_message(bot, update.message.chat_id, _("NOT IMPLEMENTED"))
                 else:
                     self.send_message(bot, update.message.chat_id, help_text)
 

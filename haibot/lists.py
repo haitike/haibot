@@ -33,15 +33,16 @@ class ListManager(object):
         result = self.db.update_one_array_addtoset("lists", "lists", list_name, upsert=True)
         return result.modified_count # In older pymongo versions is  always None
 
-    def remove_list(self, list_name):
+    def delete_list(self, list_name):
         result = self.db.update_one_array_pull("lists", "lists", list_name, upsert=True)
         return result.modified_count # In older pymongo versions is always None
 
     def clone_list(self):
         pass
 
-    def set_current_list(self):
-        pass
+    def set_current_list(self, tel_id, list):
+        result = self.db.update_one("user_data", query={"user_id":tel_id}, value_dict={"current_list":list})
+        return result.modified_count # In older pymongo versions is always None
 
     def get_readers(self):
         cursor = self.db.read_with_projection("user_data", query={"is_reader":True},
@@ -51,7 +52,7 @@ class ListManager(object):
     def add_reader(self, tel_id):
         self.db.update_one("user_data", query={"user_id":tel_id}, value_dict={"is_reader":True})
 
-    def remove_reader(self, tel_id):
+    def delete_reader(self, tel_id):
         self.db.update_one("user_data", query={"user_id":tel_id}, value_dict={"is_reader":False})
 
     def get_writers(self):
@@ -62,7 +63,7 @@ class ListManager(object):
     def add_writer(self, tel_id):
         self.db.update_one("user_data", query={"user_id":tel_id}, value_dict={"is_writer":True})
 
-    def remove_writer(self, tel_id):
+    def delete_writer(self, tel_id):
         self.db.update_one("user_data", query={"user_id":tel_id}, value_dict={"is_writer":False})
 
     def is_reader(self, tel_id):

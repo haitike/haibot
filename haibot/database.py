@@ -69,18 +69,21 @@ class Database(object):
             return False
 
     def update(self, collection, query, value_dict, upsert=False):
-        self.database[collection].update_many(query,{"$set": value_dict},upsert=upsert)
+        x = self.database[collection].update_many(query,{"$set": value_dict},upsert=upsert)
+        return x
 
     def update_one(self, collection, query, value_dict, upsert=False):
-        self.database[collection].update_one(query,{"$set": value_dict},upsert=upsert)
+        x = self.database[collection].update_one(query,{"$set": value_dict},upsert=upsert)
+        return x
 
     def update_byID(self, collection, document):
         """ Use update if the _id exists, if not use insert """
         if document is not None:
-            self.database[collection].save(document)
+            x = self.database[collection].save(document)
         else:
             raise Exception("Nothing to update, because project parameter is None")
             logger.warning("A document could not be updated in MongoDB Collection: %s" % (collection))
+        return x
 
     def update_one_array_addtoset(self, collection, array, item, query={}, upsert=False):
         x = self.database[collection].update_one(query,{"$addToSet": {array: item}},upsert=upsert)
