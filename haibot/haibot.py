@@ -7,7 +7,6 @@ from telegram import Updater
 from telegram.error import TelegramError
 from pytz import timezone, utc
 
-from haibot import dbutils
 from haibot import lists
 from haibot import profile
 from haibot.terraria import Terraria
@@ -28,7 +27,7 @@ def translation_install(translation): # Comnpability with both python 2 / 3
 def save_user(func):
     def wrapper(self, bot, update, args):
         user = update.message.from_user
-        if not dbutils.exists_document("user_data", query={"user_id" : user.id}):
+        if not profile.has_user(user.id):
             try:
                 if haibot.config.getint("haibot","BOT_OWNER") == user.id:
                     is_owner = True
@@ -46,7 +45,7 @@ def save_user(func):
             "is_reader" : True,
             "is_terraria_host" : is_owner }
 
-            dbutils.create("user_data", user_json)
+            profile.add_user(user_json)
 
         return func(self,bot,update,args)
     return wrapper
@@ -57,11 +56,6 @@ class HaiBot(object):
 
     def __init__(self):
         self.terraria = Terraria()
-
-        #Database stuff
-        dbutils.create_index("user_data", "user_id")
-        if not dbutils.exists_document("lists"):
-            self.update_one_array_addtoset("lists", "lists", "default", upsert=True)
 
         #LANGUAGE STUFF
         self.language_list = os.listdir(haibot.config.get("haibot","LOCALE_DIR"))
@@ -365,7 +359,7 @@ class HaiBot(object):
                     else:
                         if args[1] == "show" or args[1] == "s":
                             show_text = ""
-                            for list in profile.get_writers():
+                            for list in profile.get_users("is_writer",with_name=True):
                                 show_text += "%s: %s\n" % (list["user_id"], list["user_name"])
                             if show_text:
                                 self.send_message(bot, update.message.chat_id, show_text)
@@ -420,7 +414,7 @@ class HaiBot(object):
                     else:
                         if args[1] == "show" or args[1] == "s":
                             show_text = ""
-                            for list in profile.get_readers():
+                            for list in profile.get_users("is_reader",with_name=True):
                                 show_text += "%s: %s\n" % (list["user_id"], list["user_name"])
                             if show_text:
                                 self.send_message(bot, update.message.chat_id, show_text)
@@ -551,9 +545,9 @@ class HaiBot(object):
         self.send_message(bot, update.message.chat_id, _("%s is a unknown command. Use /help for available commands.") % (update.message.text))
 
     def autonotify(self, text, check_double=False, previous_chat_id=None ):
-        autonot_list = dbutils.read( "user_data", query={"in_autonot":True } )
+        autonot_list = profile.get_users("in_autonot")
         for user in autonot_list:
-            if check_double and user["user_id"]==previous_chat_id:
+            if check_double and user["user_id"] == previous_chat_id:
                 break
             else:
                 text_to_queue = str("/notify %s %s" % (user["user_id"], text))
@@ -585,8 +579,7 @@ class HaiBot(object):
             return True
         except TelegramError as e:
             try:
-                user = dbutils.read_one_with_projection("user_data", query={"user_id" : chat_id}, projection={"user_name":1})
-                user_name = user["user_name"]
+                user_name = profile.get_user_value(chat_id, "user_name")
             except:
                 user_name = "unknown"
             haibot.logger.warning("A Message could not be sent to User: %s [%d] (TelegramError: %s)" % (user_name, chat_id , e))

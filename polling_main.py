@@ -1,4 +1,3 @@
-import haibot.haibot
 from haibot.haibot import HaiBot
 
 def main():

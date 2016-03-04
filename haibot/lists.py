@@ -1,6 +1,11 @@
 from __future__ import absolute_import
 from haibot import dbutils
 
+COLLECTION = "lists"
+
+if not dbutils.exists_document("lists"):
+    dbutils.update_one_array_addtoset("lists", "lists", "default", upsert=True)
+
 def get_entries(list, only_done=False):
     pass
 
