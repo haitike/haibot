@@ -1,12 +1,15 @@
 from __future__ import absolute_import
 import pytz
-from haibot import dbutils
+from haibot import db
+from pymongo import DESCENDING
 from haibot.models import TerrariaStatus, TerrariaMilestone
+
+COL = "terraria_updates"
 
 class Terraria(object):
     def __init__(self):
         try:
-            last_update = dbutils.read_last_one("terraria_updates", query={"is_milestone" : False} )
+            last_update = db[COL].find_one({"is_milestone" : False}).sort("$natural", DESCENDING)
             self.last_status_update = TerrariaStatus.build_from_json(last_update)
         except:
             self.last_status_update = TerrariaStatus(None, False, None)
@@ -18,9 +21,9 @@ class Terraria(object):
 
     def get_log(self, amount, only_milestone=False, tzinfo=pytz.utc):
         if only_milestone:
-            log_list = dbutils.read_lastXdocuments("terraria_updates", amount, {"is_milestone" : True})
+            log_list = db[COL].find({"is_milestone" : True}).sort("$natural", DESCENDING).limit(amount)
         else:
-            log_list = dbutils.read_lastXdocuments("terraria_updates", amount)
+            log_list = db[COL].find().sort("$natural", DESCENDING).limit(amount)
 
         log_text=""
         at_least_one_item = False
@@ -44,26 +47,13 @@ class Terraria(object):
         else:
             return _("There is no IP")
 
-    def get_autonot(self, telegram_id):
-        user = dbutils.read_one("user_data", query={'user_id':telegram_id })
-        if user:
-            return user["in_autonot"]
-        else:
-            return False
-
-    def set_autonot(self, autonot, user_id):
-        dbutils.update("user_data",
-                       query={"user_id":user_id},
-                       value_dict={"in_autonot":autonot})
-        return autonot
-
     def add_milestone(self, user=None, text=" " ):
         t_update = TerrariaMilestone(user, text)
-        dbutils.create("terraria_updates", t_update.to_json())
+        db[COL].insert_one(t_update.to_json())
         return t_update.get_update_message()
 
     def change_status(self, status, user=None, ip=None ):
         t_update = TerrariaStatus(user, status, ip)
-        dbutils.create("terraria_updates", t_update.to_json())
+        db[COL].insert_one(t_update.to_json())
         self.last_status_update = t_update
         return t_update.get_update_message()

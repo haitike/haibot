@@ -190,20 +190,21 @@ class HaiBot(object):
             elif args[0] == "autonot" or args[0] == "a":
                 if len(args) > 1:
                     if args[1] == "on":
-                        is_autonot = self.terraria.set_autonot(True, sender.id)
+                        profile.set_user_value(sender.id,"in_autonot", True)
+                        self.send_message(bot, update.message.chat_id, sender.name+_(" was added to auto notifications."))
                     elif args[1] == "off":
-                        is_autonot = self.terraria.set_autonot(False, sender.id)
+                        profile.set_user_value(sender.id,"in_autonot", False)
+                        self.send_message(bot, update.message.chat_id, sender.name+_(" was removed from auto notifications."))
                     else:
                         self.send_message(bot, update.message.chat_id, "/terraria autonot\n/terraria autonot on/off")
                 else:
-                    if self.terraria.get_autonot(sender.id):
-                        is_autonot = self.terraria.set_autonot(False, sender.id)
+                    if profile.get_user_value(sender.id, "in_autonot"):
+                        profile.set_user_value(sender.id,"in_autonot", False)
+                        self.send_message(bot, update.message.chat_id, sender.name+_(" was removed from auto notifications."))
                     else:
-                        is_autonot = self.terraria.set_autonot(True, sender.id)
-                if is_autonot:
-                    self.send_message(bot, update.message.chat_id, sender.name+_(" was added to auto notifications."))
-                else:
-                    self.send_message(bot, update.message.chat_id, sender.name+_(" was removed from auto notifications."))
+                        profile.set_user_value(sender.id,"in_autonot", True)
+                        self.send_message(bot, update.message.chat_id, sender.name+_(" was added to auto notifications."))
+
 
             elif args[0] == "ip" or args[0] == "i":
                 self.send_message(bot, update.message.chat_id, self.terraria.get_ip())
@@ -273,7 +274,7 @@ class HaiBot(object):
                         if profile.get_user_value(sender.id, "is_writer"):
                             new_entry = " ".join(args[1:])
                             if lists.has_list(profile.get_user_value(sender.id, "current_list")):
-                                lists.add_entry(new_entry)
+                                lists.add_entry(new_entry,profile.get_user_value(sender.id,"current_list"))
                                 self.send_message(bot, update.message.chat_id, _("\"%s\" was added") % (new_entry))
                             else:
                                 self.send_message(bot, update.message.chat_id, _("Your list do not exists. Select one with \"/list use\""))

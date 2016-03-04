@@ -10,4 +10,4 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("bot_log")
 
 mongoclient = MongoClient(config.get("haibot","MONGO_URL"))
-mongodb = mongoclient[config.get("haibot","DB_NAME")]
+db = mongoclient[config.get("haibot","DB_NAME")]
