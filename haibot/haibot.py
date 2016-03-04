@@ -1,25 +1,23 @@
 from __future__ import absolute_import
 import gettext
 import os, sys
-import logging
 import pytz
+import haibot
 from telegram import Updater
 from telegram.error import TelegramError
 from pytz import timezone, utc
-from haibot.database import Database
+
+from haibot import dbutils
+from haibot import lists
+from haibot import profile
 from haibot.terraria import Terraria
-from haibot.lists import ListManager
 
 try:
     import configparser  # Python 3
 except ImportError:
     import ConfigParser as configparser  # Python 2
 
-CONFIGFILE_PATH = "data/config.cfg"
 DEFAULT_LANGUAGE = "en_EN"
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("bot_log")
 
 def translation_install(translation): # Comnpability with both python 2 / 3
     kwargs = {}
@@ -30,9 +28,9 @@ def translation_install(translation): # Comnpability with both python 2 / 3
 def save_user(func):
     def wrapper(self, bot, update, args):
         user = update.message.from_user
-        if not self.db.exists_document("user_data", query={"user_id" : user.id}):
+        if not dbutils.exists_document("user_data", query={"user_id" : user.id}):
             try:
-                if self.config.getint("haibot","BOT_OWNER") == user.id:
+                if haibot.config.getint("haibot","BOT_OWNER") == user.id:
                     is_owner = True
                 else:
                     is_owner = False
@@ -48,7 +46,7 @@ def save_user(func):
             "is_reader" : True,
             "is_terraria_host" : is_owner }
 
-            self.db.create("user_data", user_json)
+            dbutils.create("user_data", user_json)
 
         return func(self,bot,update,args)
     return wrapper
@@ -58,33 +56,33 @@ class HaiBot(object):
     bot = None
 
     def __init__(self):
-        self.config = configparser.ConfigParser()
-        self.config.read( CONFIGFILE_PATH )
-        self.db = Database(self.config.get("haibot","MONGO_URL"), self.config.get("haibot","DB_NAME"))
-        self.db.create_index("user_data", "user_id")
-        self.terraria = Terraria(self.db)
-        self.lists = ListManager(self.db)
+        self.terraria = Terraria()
+
+        #Database stuff
+        dbutils.create_index("user_data", "user_id")
+        if not dbutils.exists_document("lists"):
+            self.update_one_array_addtoset("lists", "lists", "default", upsert=True)
 
         #LANGUAGE STUFF
-        self.language_list = os.listdir(self.config.get("haibot","LOCALE_DIR"))
+        self.language_list = os.listdir(haibot.config.get("haibot","LOCALE_DIR"))
         for l in self.language_list:
-            self.translations[l] = gettext.translation("telegrambot", self.config.get("haibot","LOCALE_DIR"), languages=[l], fallback=True)
+            self.translations[l] = gettext.translation("telegrambot", haibot.config.get("haibot","LOCALE_DIR"), languages=[l], fallback=True)
         try:
-            if self.config.get("haibot","LANGUAGE") in self.language_list:
-                translation_install(self.translations[self.config.get("haibot","LANGUAGE")])
+            if haibot.config.get("haibot","LANGUAGE") in self.language_list:
+                translation_install(self.translations[haibot.config.get("haibot","LANGUAGE")])
             else:
                 translation_install(self.translations[DEFAULT_LANGUAGE])
         except:
             translation_install(self.translations[DEFAULT_LANGUAGE])
 
         # bot INICIALIZATION
-        self.updater = Updater(token=self.config.get("haibot","TOKEN"))
+        self.updater = Updater(token=haibot.config.get("haibot","TOKEN"))
         self.dispatcher = self.updater.dispatcher
         self.add_handlers()
 
         # Timezone Stuff
         try:
-            self.tzinfo = timezone(self.config.get("haibot","TIMEZONE"))
+            self.tzinfo = timezone(haibot.config.get("haibot","TIMEZONE"))
         except:
             self.tzinfo = pytz.utc
 
@@ -101,32 +99,32 @@ class HaiBot(object):
         WebhookHandler.do_GET = do_GET
 
         self.set_webhook()
-        self.update_queue = self.updater.start_webhook(self.config.get("haibot","IP"),
-                                                       self.config.getint("haibot","PORT"),
-                                                       self.config.get("haibot","TOKEN"))
+        self.update_queue = self.updater.start_webhook(haibot.config.get("haibot","IP"),
+                                                       haibot.config.getint("haibot","PORT"),
+                                                       haibot.config.get("haibot","TOKEN"))
         self.updater.idle()
         self.cleaning()
 
     def cleaning(self):
-        with open(CONFIGFILE_PATH, "w") as configfile:
-            self.config.write(configfile)
-            logger.info("Saving config file...")
-        logger.info("Finished program.")
+        with open(haibot.CONFIGFILE_PATH, "w") as configfile:
+            haibot.config.write(configfile)
+            haibot.logger.info("Saving config file...")
+        haibot.logger.info("Finished program.")
 
     def set_webhook(self):
-        s = self.updater.bot.setWebhook(self.config.get("haibot","WEBHOOK_URL") + "/" + self.config.get("haibot","TOKEN"))
+        s = self.updater.bot.setWebhook(haibot.config.get("haibot","WEBHOOK_URL") + "/" + haibot.config.get("haibot","TOKEN"))
         if s:
-            logger.info("webhook setup worked")
+            haibot.logger.info("webhook setup worked")
         else:
-            logger.warning("webhook setup failed")
+            haibot.logger.warning("webhook setup failed")
         return s
 
     def disable_webhook(self):
         s = self.updater.bot.setWebhook("")
         if s:
-            logger.info("webhook was disabled")
+            haibot.logger.info("webhook was disabled")
         else:
-            logger.warning("webhook couldn't be disabled")
+            haibot.logger.warning("webhook couldn't be disabled")
         return s
 
     def add_handlers(self):
@@ -248,28 +246,47 @@ class HaiBot(object):
         no_reader_text = _("You have no reading rights")
         sender = update.message.from_user
 
-        if not self.lists.is_reader(sender.id):
+        if not profile.get_user_value(sender.id,"is_reader"):
             self.send_message(bot, update.message.chat_id, no_reader_text)
         else:
             help_text = _(
                 """Use one of the following commands:
-                /list show <all:done:notdone> - show entries in the current list (s)
+                /list show <done:notdone> - show entries in the current list (s)
                 /list add - add a new entry to the current list (a)
                 /list delete - delete an entry from the current list (d)
                 /list lists <show:add:delete:clone> - manage lists (l)
                 /list use - select a list (makes the list the current list) (u)
                 /list writers <show:add:delete> - manage admins for the list (w)
                 /list readers <show:add:delete> - manage readers for the list (if apply) (r)
-                /list done - mark an entry as <done> (d)
+                /list done - mark an entry as <done> (do)
                 /list random - pick a random entry and show it (ra)
                 /list search - show all entries matching a text (se)""")
             if len(args) < 1:
                 self.send_message(bot, update.message.chat_id, help_text)
             else:
                 if args[0] == "show" or args[0] == "s":
-                    self.send_message(bot, update.message.chat_id, _("NOT IMPLEMENTED"))
+                    if len(args) <2:
+                        pass
+                    else:
+                        if args[1] == "done" or args[1] == "d":
+                            pass
+                        if args[1] == "notdone" or args[1] == "n":
+                            pass
                 elif args[0] == "add" or args[0] == "a":
-                    self.send_message(bot, update.message.chat_id, _("NOT IMPLEMENTED"))
+                    if len(args) <2:
+                        self.send_message(bot, update.message.chat_id, _("/list add <name>"))
+                    else:
+                        if profile.get_user_value(sender.id, "is_writer"):
+                            new_entry = " ".join(args[1:])
+                            if lists.has_list(profile.get_user_value(sender.id, "current_list")):
+                                lists.add_entry(new_entry)
+                                self.send_message(bot, update.message.chat_id, _("\"%s\" was added") % (new_entry))
+                            else:
+                                self.send_message(bot, update.message.chat_id, _("Your list do not exists. Select one with \"/list use\""))
+                        else:
+                            self.send_message(bot, update.message.chat_id, no_writer_text)
+
+
                 elif args[0] == "delete" or args[0] == "d":
                     self.send_message(bot, update.message.chat_id, _("NOT IMPLEMENTED"))
                 elif args[0] == "lists" or args[0] == "l":
@@ -278,7 +295,7 @@ class HaiBot(object):
                     else:
                         if args[1] == "show" or args[1] == "s":
                             show_text = ""
-                            for list in self.lists.get_lists(enumerated=True):
+                            for list in lists.get_lists(enumerated=True):
                                 show_text += "%s: %s\n" % (str(list[0]), list[1])
                             if show_text:
                                 self.send_message(bot, update.message.chat_id, show_text)
@@ -288,12 +305,12 @@ class HaiBot(object):
                             if len(args) <3:
                                 self.send_message(bot, update.message.chat_id, _("/list lists add <something>"))
                             else:
-                                if self.lists.is_writer(sender.id):
+                                if profile.get_user_value(sender.id, "is_writer"):
                                     new_list = " ".join(args[2:])
-                                    if self.lists.has_list(new_list):
+                                    if lists.has_list(new_list):
                                         self.send_message(bot, update.message.chat_id, _("\"%s\" already exists!") % (new_list))
                                     else:
-                                        self.lists.add_list(new_list)
+                                        lists.add_list(new_list)
                                         self.send_message(bot, update.message.chat_id, _("\"%s\" list was created") % (new_list))
                                 else:
                                     self.send_message(bot, update.message.chat_id, no_writer_text)
@@ -302,13 +319,13 @@ class HaiBot(object):
                             if len(args) <3:
                                 self.send_message(bot, update.message.chat_id, _("/list lists delete <list index>"))
                             else:
-                                if self.lists.is_writer(sender.id):
-                                    lists = self.lists.get_lists(enumerated=True)
+                                if profile.get_user_value(sender.id, "is_writer"):
+                                    list_array =  lists.get_lists(enumerated=True)
                                     was_deleted = False
-                                    for list in lists:
+                                    for list in list_array:
                                         try:
                                             if list[0] == int(args[2]):
-                                                self.lists.delete_list(list[1])
+                                                lists.delete_list(list[1])
                                                 was_deleted = True
                                                 self.send_message(bot, update.message.chat_id,
                                                     _("\"%s\" list was deleted. Use \"show\" for the new order. ")%(list[1]))
@@ -329,12 +346,12 @@ class HaiBot(object):
                     if len(args) <2:
                         self.send_message(bot, update.message.chat_id, _("/list use <list ID>\nUse /list lists show for IDs"))
                     else:
-                        enumerated_list = self.lists.get_lists(enumerated=True)
+                        enumerated_list = lists.get_lists(enumerated=True)
                         is_changed = False
                         for list in enumerated_list:
                             try:
                                 if list[0] == int(args[1]):
-                                    self.lists.set_current_list(sender.id, list[1])
+                                    profile.set_user_value(sender.id, "current_list", list[1])
                                     self.send_message(bot, update.message.chat_id, _("List was changed to \"%s\"") % (list[1]) )
                                     is_changed = True
                             except:
@@ -348,24 +365,24 @@ class HaiBot(object):
                     else:
                         if args[1] == "show" or args[1] == "s":
                             show_text = ""
-                            for list in self.lists.get_writers():
+                            for list in profile.get_writers():
                                 show_text += "%s: %s\n" % (list["user_id"], list["user_name"])
                             if show_text:
                                 self.send_message(bot, update.message.chat_id, show_text)
                             else:
                                 self.send_message(bot, update.message.chat_id, _("There is no writers."))
-                                logger.warning("No writers. There should be one. Add bot owner to config file")
+                                haibot.logger.warning("No writers. There should be one. Add bot owner to config file")
 
                         elif args[1] == "add" or args[1] == "a":
                             add_writers_help = _("/list writer add ID.\n Use \"/profile list\" for a list of known IDs")
                             if len(args) <3:
                                 self.send_message(bot, update.message.chat_id, add_writers_help)
                             else:
-                                if self.lists.is_writer(sender.id):
+                                if profile.get_user_value(sender.id, "is_writer"):
                                     try:
                                         new_writer = int(args[2])
-                                        if self.lists.user_exists(new_writer):
-                                            self.lists.add_writer(new_writer)
+                                        if profile.has_user(new_writer):
+                                            profile.set_user_value(new_writer, "is_writer", True)
                                             self.send_message(bot, update.message.chat_id, _("writer rights for (ID:%d) were added") % (new_writer))
                                         else:
                                             self.send_message(bot, update.message.chat_id, add_writers_help)
@@ -379,12 +396,12 @@ class HaiBot(object):
                             if len(args) <3:
                                 self.send_message(bot, update.message.chat_id, delete_writers_help)
                             else:
-                                if self.lists.is_writer(sender.id):
+                                if profile.get_user_value(sender.id, "is_writer"):
                                     try:
                                         del_writer = int(args[2])
-                                        if self.lists.user_exists(del_writer):
+                                        if profile.has_user(del_writer):
                                             if del_writer != sender.id:
-                                                self.lists.delete_writer(del_writer)
+                                                profile.set_user_value(del_writer, "is_writer", False)
                                                 self.send_message(bot, update.message.chat_id, _("writer rights for (ID:%d) were deleted") % (del_writer))
                                             else:
                                                 self.send_message(bot, update.message.chat_id, _("You can't delete your own rights"))
@@ -403,24 +420,24 @@ class HaiBot(object):
                     else:
                         if args[1] == "show" or args[1] == "s":
                             show_text = ""
-                            for list in self.lists.get_readers():
+                            for list in profile.get_readers():
                                 show_text += "%s: %s\n" % (list["user_id"], list["user_name"])
                             if show_text:
                                 self.send_message(bot, update.message.chat_id, show_text)
                             else:
                                 self.send_message(bot, update.message.chat_id, _("There is no readers."))
-                                logger.warning("No readers. There should be one. Add bot owner to config file")
+                                haibot.logger.warning("No readers. There should be one. Add bot owner to config file")
 
                         elif args[1] == "add" or args[1] == "a":
                             add_readers_help = _("/list reader add ID.\n Use \"/profile list\" for a list of known IDs")
                             if len(args) <3:
                                 self.send_message(bot, update.message.chat_id, add_readers_help)
                             else:
-                                if self.lists.is_writer(sender.id):
+                                if profile.get_user_value(sender.id, "is_writer"):
                                     try:
                                         new_reader = int(args[2])
-                                        if self.lists.user_exists(new_reader):
-                                            self.lists.add_reader(new_reader)
+                                        if profile.has_user(new_reader):
+                                            profile.set_user_value(new_reader, "is_reader", True)
                                             self.send_message(bot, update.message.chat_id, _("reader rights for (ID:%d) were added") % (new_reader))
                                         else:
                                             self.send_message(bot, update.message.chat_id, add_readers_help)
@@ -434,12 +451,12 @@ class HaiBot(object):
                             if len(args) <3:
                                 self.send_message(bot, update.message.chat_id, delete_readers_help)
                             else:
-                                if self.lists.is_writer(sender.id):
+                                if profile.get_user_value(sender.id, "is_writer"):
                                     try:
                                         del_reader = int(args[2])
-                                        if self.lists.user_exists(del_reader):
+                                        if profile.has_user(del_reader):
                                             if del_reader != sender.id:
-                                                self.lists.delete_reader(del_reader)
+                                                profile.set_user_value(del_reader, "is_reader", False)
                                                 self.send_message(bot, update.message.chat_id, _("reader rights for (ID:%d) were deleted") % (del_reader))
                                             else:
                                                 self.send_message(bot, update.message.chat_id, _("You can't delete your own rights"))
@@ -451,7 +468,7 @@ class HaiBot(object):
                                     self.send_message(bot, update.message.chat_id, no_writer_text)
                         else:
                             self.send_message(bot, update.message.chat_id, _("/list readers <show:add:delete>"))
-                elif args[0] == "done" or args[0] == "d":
+                elif args[0] == "done" or args[0] == "do":
                     "see: show done/notdone"
                     self.send_message(bot, update.message.chat_id, _("NOT IMPLEMENTED"))
                 elif args[0] == "random" or args[0] == "ra":
@@ -483,12 +500,12 @@ class HaiBot(object):
             if args[0] == "language" or args[0] == "l":
                 if args[1] in self.language_list:
                     try:
-                        self.config.set("haibot","LANGUAGE", args[1] )
-                        translation_install(self.translations[self.config.get("haibot","LANGUAGE")])
+                        haibot.config.set("haibot","LANGUAGE", args[1] )
+                        translation_install(self.translations[haibot.config.get("haibot","LANGUAGE")])
                         self.send_message(bot, update.message.chat_id, _("Language changed to %s") % (args[1]))
-                        logger.info("Language was changed to %s" % (args[1]))
+                        haibot.logger.info("Language was changed to %s" % (args[1]))
                     except:
-                        logger.info("A error happened changing language to %s" % (args[1]))
+                        haibot.logger.info("A error happened changing language to %s" % (args[1]))
 
                 else:
                     self.send_message(bot, update.message.chat_id, _("Unknown language code\n\n" + languages_codes_text))
@@ -498,32 +515,30 @@ class HaiBot(object):
     @save_user
     def command_profile(self, bot, update,args):
         if len(args) < 1:
-            user_stuff = self.db.read_one_with_projection("user_data", query={"user_id":update.message.from_user.id},
-                                                      projection={"_id":False})
+            user = profile.get_user(update.message.from_user.id)
             profile_text = ""
-            if user_stuff:
-                for i in user_stuff:
-                    profile_text += "%s = %s\n" % (str(i), str(user_stuff[i]))
+            if user:
+                for i in user:
+                    profile_text += "%s = %s\n" % (str(i), str(user[i]))
             else:
                 profile_text = _("Could not get user profile")
         else:
             if args[0] == "list" or args[0] == "l":
-                cursor = self.db.read_with_projection("user_data", projection={"user_id":True, "user_name":True } )
+                users = profile.get_allusers(projection={"user_id":True, "user_name":True })
                 profile_text = ""
-                if cursor:
-                    for i in cursor:
-                        profile_text += "%s : %s\n" % (str(i["user_id"]), i["user_name"])
+                if users:
+                    for u in users:
+                        profile_text += "%s : %s\n" % (str(u["user_id"]), u["user_name"])
                 else:
                     profile_text = _("Could not get profile list")
             else:
                 try:
                     profile_id = int(args[0])
-                    user_stuff = self.db.read_one_with_projection("user_data", query={"user_id":profile_id},
-                                                      projection={"_id":False})
+                    user = profile.get_user(profile_id)
                     profile_text = ""
-                    if user_stuff:
-                        for i in user_stuff:
-                            profile_text += "%s = %s\n" % (str(i), str(user_stuff[i]))
+                    if user:
+                        for i in user:
+                            profile_text += "%s = %s\n" % (str(i), str(user[i]))
                     else:
                         profile_text = _("Could not get profile from user <%s>") % (profile_id)
                 except:
@@ -536,7 +551,7 @@ class HaiBot(object):
         self.send_message(bot, update.message.chat_id, _("%s is a unknown command. Use /help for available commands.") % (update.message.text))
 
     def autonotify(self, text, check_double=False, previous_chat_id=None ):
-        autonot_list = self.db.read( "user_data", query={"in_autonot":True } )
+        autonot_list = dbutils.read( "user_data", query={"in_autonot":True } )
         for user in autonot_list:
             if check_double and user["user_id"]==previous_chat_id:
                 break
@@ -570,12 +585,15 @@ class HaiBot(object):
             return True
         except TelegramError as e:
             try:
-                user = self.db.read_one_with_projection("user_data", query={"user_id" : chat_id}, projection={"user_name":1})
+                user = dbutils.read_one_with_projection("user_data", query={"user_id" : chat_id}, projection={"user_name":1})
                 user_name = user["user_name"]
             except:
                 user_name = "unknown"
-            logger.warning("A Message could not be sent to User: %s [%d] (TelegramError: %s)" % (user_name, chat_id , e))
+            haibot.logger.warning("A Message could not be sent to User: %s [%d] (TelegramError: %s)" % (user_name, chat_id , e))
             return False
         except:
-            logger.warning("A Message could not be sent:\n%s " % (text))
+            haibot.logger.warning("A Message could not be sent:\n%s " % (text))
             return False
+
+
+
