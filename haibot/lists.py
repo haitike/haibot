@@ -3,7 +3,7 @@ from haibot import db
 
 COL = "lists"
 if not db[COL].find().limit(1).count():
-    db[COL].update_one({},{"$addToSet":{"lists":"default"}}, upsert=True)
+    db[COL].insert_one({"name":"default", "entries" : [] })
 
 def get_entries(list, only_done=False):
     pass
@@ -27,19 +27,24 @@ def search_entries(expression, list=None):
         "search only list"
 
 def get_lists(enumerated=False):
-    lists = db[COL].find_one()["lists"]
+    lists = []
+
+    cursor = db[COL].find({},projection={"name":True})
+    for i in cursor:
+        lists.append(i["name"])
+
     if enumerated:
         return list(enumerate(lists,1))
     else:
         return lists
 
 def add_list(list_name):
-    result = db[COL].update_one({},{"$addToSet":{"lists":list_name}}, upsert=True)
-    return result.modified_count # In older pymongo versions is  always None
+    result = db[COL].insert_one({"name":list_name, "entries" : [] })
+    return result.inserted_id
 
 def delete_list(list_name):
-    result = db[COL].update_one({},{"$pull":{"lists":list_name}}, upsert=True)
-    return result.modified_count # In older pymongo versions is always None
+    result = db[COL].delete_one({"name":list_name})
+    return result.deleted_count
 
 def clone_list(list_name):
     pass
