@@ -246,7 +246,7 @@ class HaiBot(object):
         else:
             help_text = _(
                 """Use one of the following commands:
-                /list show <done:notdone> - show entries in the current list (s)
+                /list show <all:done:notdone> - show entries in the current list (s)
                 /list add - add a new entry to the current list (a)
                 /list delete - delete an entry from the current list (d)
                 /list lists <show:add:delete:clone> - manage lists (l)
@@ -260,13 +260,33 @@ class HaiBot(object):
                 self.send_message(bot, update.message.chat_id, help_text)
             else:
                 if args[0] == "show" or args[0] == "s":
+                    show_help = False
                     if len(args) <2:
-                        pass
+                        entry_list = lists.get_entries(profile.get_user_value(sender.id,"current_list"),enumerated=True)
                     else:
                         if args[1] == "done" or args[1] == "d":
-                            pass
-                        if args[1] == "notdone" or args[1] == "n":
-                            pass
+                            entry_list = lists.get_entries(profile.get_user_value(sender.id,"current_list"), mode="done",enumerated=True)
+                        elif args[1] == "notdone" or args[1] == "n":
+                            entry_list = lists.get_entries(profile.get_user_value(sender.id,"current_list"), mode="notdone",enumerated=True)
+                        elif args[1] == "all" or args[1] == "a":
+                            entry_list = lists.get_entries(profile.get_user_value(sender.id,"current_list"), mode="all",enumerated=True)
+                        else:
+                            show_help = True
+
+                    if show_help:
+                        self.send_message(bot, update.message.chat_id, _("Use /list show <all:done:notdone>"))
+                    else:
+                        if lists.has_list(profile.get_user_value(sender.id, "current_list")):
+                            if entry_list:
+                                entry_text=""
+                                for entry in entry_list:
+                                    entry_text += "[%d] %s\n" % (entry["index"], entry["entry"] )
+                                self.send_message(bot, update.message.chat_id, entry_text)
+                            else:
+                                self.send_message(bot, update.message.chat_id, _("Your list is empty"))
+                        else:
+                            self.send_message(bot, update.message.chat_id, _("Your list do not exists. Select one with \"/list use\""))
+
                 elif args[0] == "add" or args[0] == "a":
                     if len(args) <2:
                         self.send_message(bot, update.message.chat_id, _("/list add <name>"))
@@ -274,7 +294,7 @@ class HaiBot(object):
                         if profile.get_user_value(sender.id, "is_writer"):
                             new_entry = " ".join(args[1:])
                             if lists.has_list(profile.get_user_value(sender.id, "current_list")):
-                                lists.add_entry(new_entry,profile.get_user_value(sender.id,"current_list"))
+                                lists.add_entry(new_entry,profile.get_user_value(sender.id,"current_list"), sender.id)
                                 self.send_message(bot, update.message.chat_id, _("\"%s\" was added") % (new_entry))
                             else:
                                 self.send_message(bot, update.message.chat_id, _("Your list do not exists. Select one with \"/list use\""))
