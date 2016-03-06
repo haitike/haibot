@@ -5,7 +5,7 @@ COL = "lists"
 if not db[COL].find().limit(1).count():
     db[COL].insert_one({"name":"default", "entries" : [] })
 
-def get_entries(listname, mode="notdone", enumerated=False ):
+def get_entries(listname, mode="all", enumerated=False ):
     entries = []
 
     cursor = db[COL].find_one({"name":listname},projection={"entries":True, "_id": False})
@@ -14,22 +14,25 @@ def get_entries(listname, mode="notdone", enumerated=False ):
             if enumerated:
                  entry["index"] = index
 
-            if mode == "all":
-                entries.append(entry)
+            if mode == "notdone":
+                if entry["done"] == False:
+                    entries.append(entry)
             elif mode == "done":
                 if entry["done"] == True:
                     entries.append(entry)
-            else: #notdone
-                if entry["done"] == False:
-                    entries.append(entry)
+            else: #all
+                entries.append(entry)
+
     return entries
 
 def add_entry(entry, listname, user_id):
     new_entry = {"entry":entry, "done":False, "user_id":user_id}
-    db[COL].update_one({"name":listname}, {"$push": {"entries" : new_entry}})
+    result = db[COL].update_one({"name":listname}, {"$push": {"entries" : new_entry}})
+    return result.modified_count #Care with older mongodb versions
 
-def remove_entry(entry, listname):
-    pass
+def delete_entry(entry, listname):
+    result = db[COL].update_one({"name":listname}, {"$pull": {"entries" : {"entry":entry}}})
+    return result.modified_count #Care with older mongodb versions
 
 def set_done_entry(entry, listname):
     pass

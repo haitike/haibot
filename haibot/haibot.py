@@ -262,7 +262,7 @@ class HaiBot(object):
                 if args[0] == "show" or args[0] == "s":
                     show_help = False
                     if len(args) <2:
-                        entry_list = lists.get_entries(profile.get_user_value(sender.id,"current_list"),enumerated=True)
+                        entry_list = lists.get_entries(profile.get_user_value(sender.id,"current_list"),mode="notdone",enumerated=True)
                     else:
                         if args[1] == "done" or args[1] == "d":
                             entry_list = lists.get_entries(profile.get_user_value(sender.id,"current_list"), mode="done",enumerated=True)
@@ -303,7 +303,30 @@ class HaiBot(object):
 
 
                 elif args[0] == "delete" or args[0] == "d":
-                    self.send_message(bot, update.message.chat_id, _("NOT IMPLEMENTED"))
+                    if len(args) <2:
+                        self.send_message(bot, update.message.chat_id, _("/list delete <entry index>"))
+                    else:
+                        if profile.get_user_value(sender.id, "is_writer"):
+                            if lists.has_list(profile.get_user_value(sender.id, "current_list")):
+                                entry_array =  lists.get_entries(profile.get_user_value(sender.id,"current_list"), mode="all", enumerated=True)
+                                was_deleted = False
+                                for entry in entry_array:
+                                    try:
+                                        if entry["index"] == int(args[1]):
+                                            lists.delete_entry(entry["entry"], profile.get_user_value(sender.id,"current_list") )
+                                            was_deleted = True
+                                            self.send_message(bot, update.message.chat_id,
+                                                _("\"%s\" entry was deleted. Use \"show\" for the new order. ")%(entry["entry"]))
+                                    except:
+                                        was_deleted = False
+                                if not was_deleted:
+                                    self.send_message(bot, update.message.chat_id, _("The entry could not be deleted. Use:\n"
+                                                                                     "/list delete <entry index>"))
+                            else:
+                                self.send_message(bot, update.message.chat_id, _("Your list do not exists. Select one with \"/list use\""))
+                        else:
+                            self.send_message(bot, update.message.chat_id, no_writer_text)
+
                 elif args[0] == "lists" or args[0] == "l":
                     if len(args) <2:
                         self.send_message(bot, update.message.chat_id, _("/list lists <show:add:delete:clone>"))
