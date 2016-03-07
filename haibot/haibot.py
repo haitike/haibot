@@ -264,14 +264,14 @@ class HaiBot(object):
                 if args[0] == "show" or args[0] == "s":
                     show_help = False
                     if len(args) <2:
-                        entry_list = lists.get_entries(profile.get_user_value(sender.id,"current_list"),mode="notdone",enumerated=True)
+                        entry_list = lists.get_entries(profile.get_user_value(sender.id,"current_list"),mode="notdone")
                     else:
                         if args[1] == "done" or args[1] == "d":
-                            entry_list = lists.get_entries(profile.get_user_value(sender.id,"current_list"), mode="done",enumerated=True)
+                            entry_list = lists.get_entries(profile.get_user_value(sender.id,"current_list"), mode="done")
                         elif args[1] == "notdone" or args[1] == "n":
-                            entry_list = lists.get_entries(profile.get_user_value(sender.id,"current_list"), mode="notdone",enumerated=True)
+                            entry_list = lists.get_entries(profile.get_user_value(sender.id,"current_list"), mode="notdone")
                         elif args[1] == "all" or args[1] == "a":
-                            entry_list = lists.get_entries(profile.get_user_value(sender.id,"current_list"), mode="all",enumerated=True)
+                            entry_list = lists.get_entries(profile.get_user_value(sender.id,"current_list"), mode="all")
                         else:
                             show_help = True
 
@@ -283,9 +283,9 @@ class HaiBot(object):
                                 entry_text=""
                                 for entry in entry_list:
                                     if entry["done"]:
-                                        entry_text += "[%d][done] %s\n" % (entry["index"], entry["entry"] )
+                                        entry_text += "[%d][done] %s\n" % (entry["_id"], entry["entry"] )
                                     else:
-                                        entry_text += "[%d] %s\n" % (entry["index"], entry["entry"] )
+                                        entry_text += "[%d] %s\n" % (entry["_id"], entry["entry"] )
                                 self.send_message(bot, chat, entry_text)
                             else:
                                 self.send_message(bot, chat, _("Your list is empty"))
@@ -313,15 +313,15 @@ class HaiBot(object):
                     else:
                         if profile.get_user_value(sender.id, "is_writer"):
                             if lists.has_list(profile.get_user_value(sender.id, "current_list")):
-                                entry_array =  lists.get_entries(profile.get_user_value(sender.id,"current_list"), mode="all", enumerated=True)
+                                entry_array =  lists.get_entries(profile.get_user_value(sender.id,"current_list"), mode="all")
                                 was_deleted = False
                                 for entry in entry_array:
                                     try:
-                                        if entry["index"] == int(args[1]):
+                                        if entry["_id"] == int(args[1]):
                                             lists.delete_entry(entry["_id"])
                                             was_deleted = True
                                             self.send_message(bot, chat,
-                                                _("\"%s\" entry was deleted. Use \"show\" for the new order. ")%(entry["entry"]))
+                                                _("\"%s\" entry was deleted.")%(entry["entry"]))
                                     except:
                                         was_deleted = False
                                 if not was_deleted:
@@ -518,11 +518,11 @@ class HaiBot(object):
                     else:
                         if profile.get_user_value(sender.id, "is_writer"):
                             if lists.has_list(profile.get_user_value(sender.id, "current_list")):
-                                entry_array =  lists.get_entries(profile.get_user_value(sender.id,"current_list"), mode="all", enumerated=True)
+                                entry_array =  lists.get_entries(profile.get_user_value(sender.id,"current_list"), mode="all")
                                 was_modified = False
                                 for entry in entry_array:
                                     try:
-                                        if entry["index"] == int(args[1]):
+                                        if entry["_id"] == int(args[1]):
                                             if lists.toogle_done_entry(entry["_id"]):
                                                 self.send_message(bot, chat,
                                                 _("\"%s\" is now \"done\".\n Use \"\list show <all:done:notdone>\"")%(entry["entry"]))
@@ -543,11 +543,10 @@ class HaiBot(object):
                     if lists.has_list(profile.get_user_value(sender.id, "current_list")):
                         entry = lists.get_random_entry(profile.get_user_value(sender.id,"current_list"))
                         if entry:
-                            entry["index"] = 999
                             if entry["done"] == True:
-                                self.send_message(bot, chat, "[%d][done] %s\n" % (entry["index"], entry["entry"]))
+                                self.send_message(bot, chat, "[%d][done] %s\n" % (entry["_id"], entry["entry"]))
                             else:
-                                self.send_message(bot, chat, "[%d] %s\n" % (entry["index"], entry["entry"]))
+                                self.send_message(bot, chat, "[%d] %s\n" % (entry["_id"], entry["entry"]))
                         else:
                             self.send_message(bot, chat, _("Your list is empty"))
                     else:

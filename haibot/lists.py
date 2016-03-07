@@ -9,19 +9,17 @@ if not db[COL_LISTS].find().limit(1).count():
     db[COL_LISTS].insert_one({"name": "default", "entries" : []})
 
 def add_entry(entry, listname, tel_id):
-    new_entry = {"entry":entry, "owner_id":tel_id, "list":listname, "done":False}
+    new_id = db[COL_LISTS].find_and_modify({"name":listname}, update={"$inc" : {"counter_seq" : 1}}, new=True)["counter_seq"]
+    new_entry = {"_id":new_id, "entry":entry, "owner_id":tel_id, "list":listname, "done":False}
     result = db[COL_ENTRIES].insert_one(new_entry)
     return result.inserted_id
 
-def get_entries(listname, mode="all", enumerated=False ):
+def get_entries(listname, mode="all"):
     entries = []
 
     cursor = db[COL_ENTRIES].find({"list":listname}, projection={"owner_id":False}).sort("$natural", 1)
     if cursor:
         for index, entry in enumerate(cursor, 1):
-            if enumerated:
-                 entry["index"] = index
-
             if mode == "notdone":
                 if entry["done"] == False:
                     entries.append(entry)
@@ -30,7 +28,6 @@ def get_entries(listname, mode="all", enumerated=False ):
                     entries.append(entry)
             else: #all
                 entries.append(entry)
-
     return entries
 
 def delete_entry(entry_id):
@@ -57,6 +54,10 @@ def search_entries(expression, list=None):
     else:
         "search only list"
 
+def add_list(listname, tel_id):
+    result = db[COL_LISTS].insert_one({"name":listname, "owner_id": tel_id, "counter_seq": 0 })
+    return result.inserted_id
+
 def get_lists(enumerated=False):
     lists = []
 
@@ -68,10 +69,6 @@ def get_lists(enumerated=False):
         return list(enumerate(lists,1))
     else:
         return lists
-
-def add_list(listname, tel_id):
-    result = db[COL_LISTS].insert_one({"name":listname, "owner_id": tel_id})
-    return result.inserted_id
 
 def delete_list(listname):
     result = db[COL_LISTS].delete_one({"name":listname})

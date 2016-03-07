@@ -1,6 +1,5 @@
 WORKING ORDER:
-list random --> quote --> entries improved order with "holes" and index stored in mongo -> list search --> WantToPlay (Improved Terraria) --> list clone --> Terraria Agent
-
+quote -> list search --> WantToPlay (Improved Terraria) --> list clone --> Terraria Agent
 
 SMALL TODO:
 
