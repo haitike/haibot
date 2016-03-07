@@ -43,6 +43,8 @@ def toogle_done_entry(entry_id):
 
 def get_random_entry(listname):
     pass
+    # Need INT in the fiels for the random
+    #db.entries.find_one({"_id": {"$gte": rand()}})
 
 def search_entries(expression, list=None):
     if list == None:
