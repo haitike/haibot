@@ -511,6 +511,7 @@ class HaiBot(object):
                                     self.send_message(bot, chat, no_writer_text)
                         else:
                             self.send_message(bot, chat, _("/list readers <show:add:delete>"))
+
                 elif args[0] == "done" or args[0] == "do":
                     if len(args) <2:
                         self.send_message(bot, chat, _("/list done <entry index>"))
@@ -539,7 +540,19 @@ class HaiBot(object):
                         else:
                             self.send_message(bot, chat, no_writer_text)
                 elif args[0] == "random" or args[0] == "ra":
-                    self.send_message(bot, chat, _("NOT IMPLEMENTED"))
+                    if lists.has_list(profile.get_user_value(sender.id, "current_list")):
+                        entry = lists.get_random_entry(profile.get_user_value(sender.id,"current_list"))
+                        if entry:
+                            entry["index"] = 999
+                            if entry["done"] == True:
+                                self.send_message(bot, chat, "[%d][done] %s\n" % (entry["index"], entry["entry"]))
+                            else:
+                                self.send_message(bot, chat, "[%d] %s\n" % (entry["index"], entry["entry"]))
+                        else:
+                            self.send_message(bot, chat, _("Your list is empty"))
+                    else:
+                        self.send_message(bot, chat, _("Your list do not exists. Select one with \"/list use\""))
+
                 elif args[0] == "search" or args[0] == "se":
                     self.send_message(bot, chat, _("NOT IMPLEMENTED"))
                 else:

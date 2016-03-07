@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from random import randint
 from haibot import db
 
 COL_LISTS = "lists"
@@ -42,9 +43,13 @@ def toogle_done_entry(entry_id):
     return not is_done
 
 def get_random_entry(listname):
-    pass
-    # Need INT in the fiels for the random
-    #db.entries.find_one({"_id": {"$gte": rand()}})
+    count = db[COL_ENTRIES].count({"list":listname})
+    if count == 0:
+        return None
+    else:
+        r = randint(0, count - 1  )
+        x = db[COL_ENTRIES].find({"list":listname}).limit(-1).skip(r)
+        return x[0]
 
 def search_entries(expression, list=None):
     if list == None:
