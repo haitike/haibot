@@ -280,7 +280,10 @@ class HaiBot(object):
                             if entry_list:
                                 entry_text=""
                                 for entry in entry_list:
-                                    entry_text += "[%d] %s\n" % (entry["index"], entry["entry"] )
+                                    if entry["done"]:
+                                        entry_text += "[%d][done] %s\n" % (entry["index"], entry["entry"] )
+                                    else:
+                                        entry_text += "[%d] %s\n" % (entry["index"], entry["entry"] )
                                 self.send_message(bot, update.message.chat_id, entry_text)
                             else:
                                 self.send_message(bot, update.message.chat_id, _("Your list is empty"))
@@ -313,7 +316,7 @@ class HaiBot(object):
                                 for entry in entry_array:
                                     try:
                                         if entry["index"] == int(args[1]):
-                                            lists.delete_entry(entry["entry"], profile.get_user_value(sender.id,"current_list") )
+                                            lists.delete_entry(entry["_id"])
                                             was_deleted = True
                                             self.send_message(bot, update.message.chat_id,
                                                 _("\"%s\" entry was deleted. Use \"show\" for the new order. ")%(entry["entry"]))
@@ -348,7 +351,7 @@ class HaiBot(object):
                                     if lists.has_list(new_list):
                                         self.send_message(bot, update.message.chat_id, _("\"%s\" already exists!") % (new_list))
                                     else:
-                                        lists.add_list(new_list)
+                                        lists.add_list(new_list, sender.id)
                                         self.send_message(bot, update.message.chat_id, _("\"%s\" list was created") % (new_list))
                                 else:
                                     self.send_message(bot, update.message.chat_id, no_writer_text)
@@ -507,8 +510,32 @@ class HaiBot(object):
                         else:
                             self.send_message(bot, update.message.chat_id, _("/list readers <show:add:delete>"))
                 elif args[0] == "done" or args[0] == "do":
-                    "see: show done/notdone"
-                    self.send_message(bot, update.message.chat_id, _("NOT IMPLEMENTED"))
+                    if len(args) <2:
+                        self.send_message(bot, update.message.chat_id, _("/list done <entry index>"))
+                    else:
+                        if profile.get_user_value(sender.id, "is_writer"):
+                            if lists.has_list(profile.get_user_value(sender.id, "current_list")):
+                                entry_array =  lists.get_entries(profile.get_user_value(sender.id,"current_list"), mode="all", enumerated=True)
+                                was_modified = False
+                                for entry in entry_array:
+                                    try:
+                                        if entry["index"] == int(args[1]):
+                                            if lists.toogle_done_entry(entry["_id"]):
+                                                self.send_message(bot, update.message.chat_id,
+                                                _("\"%s\" is now \"done\".\n Use \"\list show <all:done:notdone>\"")%(entry["entry"]))
+                                            else:
+                                                self.send_message(bot, update.message.chat_id,
+                                                _("\"%s\" is now \"notdone\".\n Use \"\list show <all:done:notdone>\"")%(entry["entry"]))
+                                            was_modified = True
+                                    except:
+                                        was_modified = False
+                                if not was_modified:
+                                    self.send_message(bot, update.message.chat_id, _("Invalid entry index. Use:\n"
+                                                                                     "\"/list show\" for entry indexes"))
+                            else:
+                                self.send_message(bot, update.message.chat_id, _("Your list do not exists. Select one with \"/list use\""))
+                        else:
+                            self.send_message(bot, update.message.chat_id, no_writer_text)
                 elif args[0] == "random" or args[0] == "ra":
                     self.send_message(bot, update.message.chat_id, _("NOT IMPLEMENTED"))
                 elif args[0] == "search" or args[0] == "se":
