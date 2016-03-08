@@ -15,14 +15,13 @@ def add_entry(entry, listname, tel_id):
     new_index = db[COL_LISTS].find_and_modify({"name":listname}, update={"$inc" : {"index_counter" : 1}}, new=True)["index_counter"]
     new_entry = {"index":new_index, "entry":entry, "owner_id":tel_id, "list":listname, "done":False}
     result = db[COL_ENTRIES].insert_one(new_entry)
-    return result.inserted_id
+    return new_index
 
 def delete_entry(index, listname):
     return db[COL_ENTRIES].find_one_and_delete({"list":listname,"index":index})
 
 def get_entry(index, listname):
-    x = db[COL_ENTRIES].find_one({"list":listname,"index":index})
-    return x
+    return  db[COL_ENTRIES].find_one({"list":listname,"index":index})
 
 def get_entries(listname, mode="all"):
     entries = []

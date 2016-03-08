@@ -300,8 +300,8 @@ class HaiBot(object):
                         if profile.get_user_value(sender.id, "is_writer"):
                             new_entry = " ".join(args[1:])
                             if lists.has_list(profile.get_user_value(sender.id, "current_list")):
-                                lists.add_entry(new_entry,current_list, sender.id)
-                                self.send_message(bot, chat, _("\"%s\" was added") % (new_entry))
+                                new_index = lists.add_entry(new_entry,current_list, sender.id)
+                                self.send_message(bot, chat, _("\"%s\" was added [#%d]") % (new_entry, new_index))
                             else:
                                 self.send_message(bot, chat, _("Your list do not exists. Select one with \"/list use\""))
                         else:
@@ -546,6 +546,65 @@ class HaiBot(object):
                 elif args[0] == "search" or args[0] == "se":
                     self.send_message(bot, chat, _("NOT IMPLEMENTED"))
                 else:
+                    self.send_message(bot, chat, help_text)
+
+    @save_user
+    def command_quote(self, bot, update, args):
+        chat = update.message.chat_id
+        sender = update.message.from_user
+
+        help_text = _(
+            """Use one of the following commands:
+            /quote <number> show the quote associated to a index
+            /quote add - add a new entry to the current list (a)
+            /quote delete - delete an entry from the current list (d)
+            /quote random - pick a random quote and show it (r/ra)
+            /quote search - show all quotes matching a text (s/se)""")
+        if len(args) < 1:
+            self.send_message(bot, chat, help_text)
+        else:
+            if args[0] == "add" or args[0] == "a":
+                if len(args) <2:
+                    self.send_message(bot, chat, _("/quote add <name>"))
+                else:
+                    new_entry = " ".join(args[1:])
+                    new_index = lists.add_entry(new_entry,"quote",sender.id)
+                    self.send_message(bot, chat, _("\"%s\" was added to quotes [#%d]") % (new_entry, new_index))
+
+            elif args[0] == "delete" or args[0] == "d":
+                if len(args) <2:
+                    self.send_message(bot, chat, _("/quote delete <entry index>"))
+                else:
+                    if profile.get_user_value(sender.id, "is_writer"):
+                        try:
+                            if lists.has_entry_index(int(args[1]), "quote"):
+                                deleted_entry = lists.delete_entry(int(args[1]), "quote")
+                                self.send_message(bot, chat, _("\"%s\" quote was deleted.")%(deleted_entry["entry"]))
+                            else:
+                                self.send_message(bot, chat, _("The quote number does not exist. Use /quote search <word>"))
+                        except:
+                            self.send_message(bot, chat, _("Use /quote delete <entry number>"))
+                    else:
+                        self.send_message(bot, chat, _("You have no writting rights"))
+
+            elif args[0] == "random" or args[0] == "r" or args[0] == "ra" :
+                entry = lists.get_random_entry("quote")
+                if entry:
+                    self.send_message(bot, chat, "[%d] %s\n" % (entry["index"], entry["entry"]))
+                else:
+                    self.send_message(bot, chat, _("There is no quotes"))
+
+            elif args[0] == "search" or args[0] == "s" or args[0] == "se":
+                self.send_message(bot, chat, _("NOT IMPLEMENTED"))
+
+            else:
+                try:
+                    if lists.has_entry_index(int(args[0]), "quote" ) :
+                        entry = lists.get_entry( int(args[0]), "quote")
+                        self.send_message(bot, chat, "[%d] %s\n" % (entry["index"], entry["entry"]))
+                    else:
+                        self.send_message(bot, chat, _("Invalid number. Use /quote search <word>"))
+                except:
                     self.send_message(bot, chat, help_text)
 
     @save_user
