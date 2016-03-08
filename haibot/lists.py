@@ -5,19 +5,29 @@ from haibot import db
 COL_LISTS = "lists"
 COL_ENTRIES = "entries"
 
+db[COL_LISTS].create_index("name")
+db[COL_ENTRIES].create_index([("list", 1) , ("index", 1)], name="entry_index")
+
 if not db[COL_LISTS].find().limit(1).count():
-    db[COL_LISTS].insert_one({"name": "default", "entries" : []})
+    result = db[COL_LISTS].insert_one({"name":"default", "owner_id": 0, "index_counter": 0 })
 
 def add_entry(entry, listname, tel_id):
-    new_id = db[COL_LISTS].find_and_modify({"name":listname}, update={"$inc" : {"counter_seq" : 1}}, new=True)["counter_seq"]
-    new_entry = {"_id":new_id, "entry":entry, "owner_id":tel_id, "list":listname, "done":False}
+    new_index = db[COL_LISTS].find_and_modify({"name":listname}, update={"$inc" : {"index_counter" : 1}}, new=True)["index_counter"]
+    new_entry = {"index":new_index, "entry":entry, "owner_id":tel_id, "list":listname, "done":False}
     result = db[COL_ENTRIES].insert_one(new_entry)
     return result.inserted_id
+
+def delete_entry(index, listname):
+    return db[COL_ENTRIES].find_one_and_delete({"list":listname,"index":index})
+
+def get_entry(index, listname):
+    x = db[COL_ENTRIES].find_one({"list":listname,"index":index})
+    return x
 
 def get_entries(listname, mode="all"):
     entries = []
 
-    cursor = db[COL_ENTRIES].find({"list":listname}, projection={"owner_id":False}).sort("$natural", 1)
+    cursor = db[COL_ENTRIES].find({"list":listname}, projection={"owner_id":False}).hint("entry_index").sort("$natural", 1)
     if cursor:
         for index, entry in enumerate(cursor, 1):
             if mode == "notdone":
@@ -30,14 +40,10 @@ def get_entries(listname, mode="all"):
                 entries.append(entry)
     return entries
 
-def delete_entry(entry_id):
-    result = db[COL_ENTRIES].delete_one({"_id":entry_id})
-    return result.deleted_count
-
-def toogle_done_entry(entry_id):
-    is_done = db[COL_ENTRIES].find_one({"_id":entry_id}, {"done":True, "_id":False})["done"]
-    db[COL_ENTRIES].update_one({"_id":entry_id}, {"$set" : {"done" : not is_done}})
-    return not is_done
+def toogle_done_entry(index, listname):
+    is_done = db[COL_ENTRIES].find_one({"list":listname,"index":index}, {"done":True, "_id":False})["done"]
+    entry = db[COL_ENTRIES].find_one_and_update({"list":listname,"index":index}, {"$set" : {"done" : not is_done}})
+    return entry, not is_done
 
 def get_random_entry(listname):
     count = db[COL_ENTRIES].count({"list":listname})
@@ -48,14 +54,19 @@ def get_random_entry(listname):
         x = db[COL_ENTRIES].find({"list":listname}).limit(-1).skip(r)
         return x[0]
 
-def search_entries(expression, list=None):
-    if list == None:
+def search_entries(expression, listname=None):
+    "HINT"
+    if listname == None:
         "search all lists"
     else:
         "search only list"
 
-def add_list(listname, tel_id):
-    result = db[COL_LISTS].insert_one({"name":listname, "owner_id": tel_id, "counter_seq": 0 })
+def has_entry_index( index, listname):
+    x = db[COL_ENTRIES].find({"list":listname,"index":index}).hint("entry_index").limit(1).count()
+    return x
+
+def add_list(listname, tel_id=0):
+    result = db[COL_LISTS].insert_one({"name":listname, "owner_id": tel_id, "index_counter": 0 })
     return result.inserted_id
 
 def get_lists(enumerated=False):
