@@ -281,7 +281,7 @@ class HaiBot(object):
                     else:
                         if lists.has_list(profile.get_user_value(sender.id, "current_list")):
                             if entry_list:
-                                entry_text=""
+                                entry_text= _("%s: \n") % (current_list)
                                 for entry in entry_list:
                                     if entry["done"]:
                                         entry_text += "[%d][done] %s\n" % (entry["index"], entry["entry"] )
@@ -301,7 +301,7 @@ class HaiBot(object):
                             new_entry = " ".join(args[1:])
                             if lists.has_list(profile.get_user_value(sender.id, "current_list")):
                                 new_index = lists.add_entry(new_entry,current_list, sender.id)
-                                self.send_message(bot, chat, _("\"%s\" was added [#%d]") % (new_entry, new_index))
+                                self.send_message(bot, chat, _("Entry #%d was added to list \"%s\"") % (new_index, current_list))
                             else:
                                 self.send_message(bot, chat, _("Your list do not exists. Select one with \"/list use\""))
                         else:
@@ -316,7 +316,7 @@ class HaiBot(object):
                                 try:
                                     if lists.has_entry_index(int(args[1]), current_list):
                                         deleted_entry = lists.delete_entry(int(args[1]),profile.get_user_value(sender.id, "current_list"))
-                                        self.send_message(bot, chat, _("\"%s\" entry was deleted.")%(deleted_entry["entry"]))
+                                        self.send_message(bot, chat, _("Entry #%d was deleted from list \"%s\".")%(deleted_entry["index"], current_list))
                                     else:
                                         self.send_message(bot, chat, _("The entry number does not exist. Use /list show"))
                                 except:
@@ -347,8 +347,8 @@ class HaiBot(object):
                                     if lists.has_list(new_list):
                                         self.send_message(bot, chat, _("\"%s\" already exists!") % (new_list))
                                     else:
-                                        lists.add_list(new_list, sender.id)
-                                        self.send_message(bot, chat, _("\"%s\" list was created") % (new_list))
+                                        list_index = lists.add_list(new_list, sender.id)
+                                        self.send_message(bot, chat, _("\"%s\" list was created. Switch with /list use %d") % (new_list, list_index))
                                 else:
                                     self.send_message(bot, chat, no_writer_text)
 
@@ -389,7 +389,7 @@ class HaiBot(object):
                             try:
                                 if list[0] == int(args[1]):
                                     profile.set_user_value(sender.id, "current_list", list[1])
-                                    self.send_message(bot, chat, _("List was changed to \"%s\"") % (list[1]) )
+                                    self.send_message(bot, chat, _("%s selected list: \"%s\"") % (sender.name, list[1]) )
                                     is_changed = True
                             except:
                                 is_changed = False
@@ -516,11 +516,10 @@ class HaiBot(object):
                                     if lists.has_entry_index(int(args[1]), current_list):
                                         entry, done_status = lists.toogle_done_entry(int(args[1]),profile.get_user_value(sender.id, "current_list"))
                                         if done_status:
-                                            self.send_message(bot, chat,
-                                            _("\"%s\" is now \"done\".\n Use \"\list show <all:done:notdone>\"")%(entry["entry"]))
+                                            self.send_message(bot, chat,_("#%d: done (list:%s)")%(entry["index"],current_list))
+                                            self.send_message(bot, chat,"See: \list show <all:done:notdone>")
                                         else:
-                                            self.send_message(bot, chat,
-                                            _("\"%s\" is now \"notdone\".\n Use \"\list show <all:done:notdone>\"")%(entry["entry"]))
+                                            self.send_message(bot, chat,_("#%d: notdone (list:%s)")%(entry["index"],current_list))
                                     else:
                                         self.send_message(bot, chat, _("The entry number does not exist. Use /list show all"))
                                 except:
@@ -573,7 +572,7 @@ class HaiBot(object):
                         self.send_message(bot, chat, _("Error: There is not Quote List in database."))
                         haibot.logger.warning("There is not Quote List in database.")
                     else:
-                        self.send_message(bot, chat, _("\"%s\" was added to quotes [#%d]") % (new_entry, new_index))
+                        self.send_message(bot, chat, _("Quote #%d was recorded") % (new_index))
 
             elif args[0] == "delete" or args[0] == "d":
                 if len(args) <2:
@@ -583,7 +582,7 @@ class HaiBot(object):
                         try:
                             if lists.has_entry_index(int(args[1]), "quote"):
                                 deleted_entry = lists.delete_entry(int(args[1]), "quote")
-                                self.send_message(bot, chat, _("\"%s\" quote was deleted.")%(deleted_entry["entry"]))
+                                self.send_message(bot, chat, _("Quote #%d was deleted.")%(deleted_entry["index"]))
                             else:
                                 self.send_message(bot, chat, _("The quote number does not exist. Use /quote search <word>"))
                         except:

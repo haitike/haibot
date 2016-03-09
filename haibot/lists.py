@@ -72,8 +72,10 @@ def has_entry_index( index, listname):
     return x
 
 def add_list(listname, tel_id=0):
-    result = db[COL_LISTS].insert_one({"name":listname, "owner_id": tel_id, "index_counter": 0, "hidden": False })
-    return result.inserted_id
+    db[COL_LISTS].insert_one({"name":listname, "owner_id": tel_id, "index_counter": 0, "hidden": False })
+    for i in get_lists(enumerated=True):
+        if i[1] == listname:
+            return i[0]
 
 def get_lists(enumerated=False, get_hidden=False):
     lists = []
