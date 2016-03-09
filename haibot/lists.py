@@ -75,10 +75,14 @@ def add_list(listname, tel_id=0):
     result = db[COL_LISTS].insert_one({"name":listname, "owner_id": tel_id, "index_counter": 0, "hidden": False })
     return result.inserted_id
 
-def get_lists(enumerated=False):
+def get_lists(enumerated=False, get_hidden=False):
     lists = []
 
-    cursor = db[COL_LISTS].find({"hidden": False}, projection={"name":True,"_id":False}).sort("$natural", 1)
+    if get_hidden:
+        cursor = db[COL_LISTS].find({}, projection={"name":True,"_id":False}).sort("$natural", 1)
+    else:
+        cursor = db[COL_LISTS].find({"hidden": False}, projection={"name":True,"_id":False}).sort("$natural", 1)
+
     for i in cursor:
         lists.append(i["name"])
 
@@ -95,5 +99,5 @@ def clone_list(listname):
     pass
 
 def has_list(listname):
-    if listname in get_lists():
+    if listname in get_lists(get_hidden=True):
         return True
