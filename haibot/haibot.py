@@ -569,7 +569,11 @@ class HaiBot(object):
                 else:
                     new_entry = " ".join(args[1:])
                     new_index = lists.add_entry(new_entry,"quote",sender.id)
-                    self.send_message(bot, chat, _("\"%s\" was added to quotes [#%d]") % (new_entry, new_index))
+                    if not new_index:
+                        self.send_message(bot, chat, _("Error: There is not Quote List in database."))
+                        haibot.logger.warning("There is not Quote List in database.")
+                    else:
+                        self.send_message(bot, chat, _("\"%s\" was added to quotes [#%d]") % (new_entry, new_index))
 
             elif args[0] == "delete" or args[0] == "d":
                 if len(args) <2:

@@ -8,14 +8,21 @@ COL_ENTRIES = "entries"
 db[COL_LISTS].create_index("name")
 db[COL_ENTRIES].create_index([("list", 1) , ("index", 1)], name="entry_index")
 
-if not db[COL_LISTS].find().limit(1).count():
-    result = db[COL_LISTS].insert_one({"name":"default", "owner_id": 0, "index_counter": 0 })
+if not db[COL_LISTS].find({"hidden": False}).limit(1).count():
+    db[COL_LISTS].insert_one({"name":"default", "owner_id": 0, "index_counter": 0, "hidden": False})
+
+if not db[COL_LISTS].find({"name":"quote"}).limit(1).count():
+    db[COL_LISTS].insert_one({"name":"quote", "owner_id": 0, "index_counter": 0, "hidden": True})
+
 
 def add_entry(entry, listname, tel_id):
-    new_index = db[COL_LISTS].find_and_modify({"name":listname}, update={"$inc" : {"index_counter" : 1}}, new=True)["index_counter"]
-    new_entry = {"index":new_index, "entry":entry, "owner_id":tel_id, "list":listname, "done":False}
-    result = db[COL_ENTRIES].insert_one(new_entry)
-    return new_index
+    try:
+        new_index = db[COL_LISTS].find_and_modify({"name":listname}, update={"$inc" : {"index_counter" : 1}}, new=True)["index_counter"]
+        new_entry = {"index":new_index, "entry":entry, "owner_id":tel_id, "list":listname, "done":False}
+        result = db[COL_ENTRIES].insert_one(new_entry)
+        return new_index
+    except:
+        return None
 
 def delete_entry(index, listname):
     return db[COL_ENTRIES].find_one_and_delete({"list":listname,"index":index})
@@ -65,13 +72,13 @@ def has_entry_index( index, listname):
     return x
 
 def add_list(listname, tel_id=0):
-    result = db[COL_LISTS].insert_one({"name":listname, "owner_id": tel_id, "index_counter": 0 })
+    result = db[COL_LISTS].insert_one({"name":listname, "owner_id": tel_id, "index_counter": 0, "hidden": False })
     return result.inserted_id
 
 def get_lists(enumerated=False):
     lists = []
 
-    cursor = db[COL_LISTS].find({}, projection={"name":True,"_id":False}).sort("$natural", 1)
+    cursor = db[COL_LISTS].find({"hidden": False}, projection={"name":True,"_id":False}).sort("$natural", 1)
     for i in cursor:
         lists.append(i["name"])
 
