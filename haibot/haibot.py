@@ -300,7 +300,7 @@ class HaiBot(object):
                         if profile.get_user_value(sender.id, "is_writer"):
                             new_entry = " ".join(args[1:])
                             if lists.has_list(profile.get_user_value(sender.id, "current_list")):
-                                new_index = lists.add_entry(new_entry,current_list, sender.id)
+                                new_index = lists.add_entry(new_entry,current_list, sender.name)
                                 self.send_message(bot, chat, _("Entry #%d was added to list \"%s\"") % (new_index, current_list))
                             else:
                                 self.send_message(bot, chat, _("Your list do not exists. Select one with \"/list use\""))
@@ -347,7 +347,7 @@ class HaiBot(object):
                                     if lists.has_list(new_list):
                                         self.send_message(bot, chat, _("\"%s\" already exists!") % (new_list))
                                     else:
-                                        list_index = lists.add_list(new_list, sender.id)
+                                        list_index = lists.add_list(new_list, sender.name)
                                         self.send_message(bot, chat, _("\"%s\" list was created. Switch with /list use %d") % (new_list, list_index))
                                 else:
                                     self.send_message(bot, chat, no_writer_text)
@@ -553,28 +553,25 @@ class HaiBot(object):
         sender = update.message.from_user
 
         help_text = _(
-            """Use one of the following commands:
-            /quote <number> show the quote associated to a index
-            /quote add - add a new entry to the current list (a)
-            /quote delete - delete an entry from the current list (d)
-            /quote random - pick a random quote and show it (r/ra)
-            /quote search - show all quotes matching a text (s/se)""")
+            "You can add a quote, selecting a message and clicking on \"reply\" and then writting /quote\n\n"
+            "/quote search - show all quotew matching a text (s/se)\n"
+            "/quote <number> show the quote associated to a index\n"
+            "/quote delete - delete an entry from the current list (d)\n"
+            "/quote random - pick a random quote and show it (r/ra)")
         if len(args) < 1:
-            self.send_message(bot, chat, help_text)
-        else:
-            if args[0] == "add" or args[0] == "a":
-                if len(args) <2:
-                    self.send_message(bot, chat, _("/quote add <name>"))
+            if update.message.reply_to_message:
+                username = update.message.reply_to_message.from_user.name
+                new_quote = update.message.reply_to_message.text
+                new_index = lists.add_entry(new_quote, "quote", username)
+                if not new_index:
+                    self.send_message(bot, chat, _("Error: There is not Quote List in database."))
+                    haibot.logger.warning("There is not Quote List in database.")
                 else:
-                    new_entry = " ".join(args[1:])
-                    new_index = lists.add_entry(new_entry,"quote",sender.id)
-                    if not new_index:
-                        self.send_message(bot, chat, _("Error: There is not Quote List in database."))
-                        haibot.logger.warning("There is not Quote List in database.")
-                    else:
-                        self.send_message(bot, chat, _("Quote #%d was recorded") % (new_index))
-
-            elif args[0] == "delete" or args[0] == "d":
+                    self.send_message(bot, chat, _("Quote #%d was recorded") % (new_index))
+            else:
+                self.send_message(bot, chat, help_text)
+        else:
+            if args[0] == "delete" or args[0] == "d":
                 if len(args) <2:
                     self.send_message(bot, chat, _("/quote delete <entry index>"))
                 else:
@@ -593,7 +590,8 @@ class HaiBot(object):
             elif args[0] == "random" or args[0] == "r" or args[0] == "ra" :
                 entry = lists.get_random_entry("quote")
                 if entry:
-                    self.send_message(bot, chat, "[%d] %s\n" % (entry["index"], entry["entry"]))
+                    self.send_message(bot, chat, "*%s*\n`[%d] %s`\n"
+                                          % (entry["owner"], entry["index"], entry["entry"]), with_markdown=True)
                 else:
                     self.send_message(bot, chat, _("There is no quotes"))
 
@@ -604,7 +602,8 @@ class HaiBot(object):
                 try:
                     if lists.has_entry_index(int(args[0]), "quote" ) :
                         entry = lists.get_entry( int(args[0]), "quote")
-                        self.send_message(bot, chat, "[%d] %s\n" % (entry["index"], entry["entry"]))
+                        self.send_message(bot, chat, "*%s*\n`[%d] %s`\n"
+                                          % (entry["owner"], entry["index"], entry["entry"]), with_markdown=True)
                     else:
                         self.send_message(bot, chat, _("Invalid number. Use /quote search <word>"))
                 except:
@@ -708,9 +707,12 @@ class HaiBot(object):
     def notify(self, bot, update, args):
         self.send_message(bot, int(args[0]), " ".join(args[1:]))
 
-    def send_message(self, bot, chat_id, text):
+    def send_message(self, bot, chat_id, text, with_markdown=False):
         try:
-            bot.sendMessage(chat_id=chat_id, text=text)
+            if with_markdown:
+                bot.sendMessage(chat_id=chat_id, text=text, disable_web_page_preview=True, parse_mode="Markdown")
+            else:
+                bot.sendMessage(chat_id=chat_id, text=text, disable_web_page_preview=True)
             return True
         except TelegramError as e:
             try:
@@ -722,6 +724,3 @@ class HaiBot(object):
         except:
             haibot.logger.warning("A Message could not be sent:\n%s " % (text))
             return False
-
-
-

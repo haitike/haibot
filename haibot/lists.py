@@ -9,17 +9,16 @@ db[COL_LISTS].create_index("name")
 db[COL_ENTRIES].create_index([("list", 1) , ("index", 1)], name="entry_index")
 
 if not db[COL_LISTS].find({"hidden": False}).limit(1).count():
-    db[COL_LISTS].insert_one({"name":"default", "owner_id": 0, "index_counter": 0, "hidden": False})
+    db[COL_LISTS].insert_one({"name":"default", "owner": "None", "index_counter": 0, "hidden": False})
 
 if not db[COL_LISTS].find({"name":"quote"}).limit(1).count():
-    db[COL_LISTS].insert_one({"name":"quote", "owner_id": 0, "index_counter": 0, "hidden": True})
+    db[COL_LISTS].insert_one({"name":"quote", "owner": "None", "index_counter": 0, "hidden": True})
 
-
-def add_entry(entry, listname, tel_id):
+def add_entry(entry, listname, telegram_user):
     try:
         new_index = db[COL_LISTS].find_and_modify({"name":listname}, update={"$inc" : {"index_counter" : 1}}, new=True)["index_counter"]
-        new_entry = {"index":new_index, "entry":entry, "owner_id":tel_id, "list":listname, "done":False}
-        result = db[COL_ENTRIES].insert_one(new_entry)
+        new_entry = {"index":new_index, "entry":entry, "owner":telegram_user, "list":listname, "done":False}
+        db[COL_ENTRIES].insert_one(new_entry)
         return new_index
     except:
         return None
@@ -33,7 +32,7 @@ def get_entry(index, listname):
 def get_entries(listname, mode="all"):
     entries = []
 
-    cursor = db[COL_ENTRIES].find({"list":listname}, projection={"owner_id":False}).hint("entry_index").sort("$natural", 1)
+    cursor = db[COL_ENTRIES].find({"list":listname}).hint("entry_index").sort("$natural", 1)
     if cursor:
         for index, entry in enumerate(cursor, 1):
             if mode == "notdone":
@@ -71,8 +70,8 @@ def has_entry_index( index, listname):
     x = db[COL_ENTRIES].find({"list":listname,"index":index}).hint("entry_index").limit(1).count()
     return x
 
-def add_list(listname, tel_id=0):
-    db[COL_LISTS].insert_one({"name":listname, "owner_id": tel_id, "index_counter": 0, "hidden": False })
+def add_list(listname, telegram_user="None"):
+    db[COL_LISTS].insert_one({"name":listname, "owner": telegram_user, "index_counter": 0, "hidden": False })
     for i in get_lists(enumerated=True):
         if i[1] == listname:
             return i[0]
