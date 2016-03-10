@@ -26,3 +26,6 @@ Commands implemented:
 - Autonot (auto-notifications for: terraria milestone, terraria on, terraria off and play command  )
 - Play (Notify that you are ready for playing for X hours)
 - Settings (Change bot language) and Profile (users info)
+
+Extra notes:
+- You must disable /setprivacy talking with BotFather if you want to be able to add quotes to the "quote" command in groups.
