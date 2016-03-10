@@ -1,8 +1,7 @@
 WORKING ORDER:
-list/quote search -->  list number -> Autonot Command ->  WantToPlay (Job Planner?) --> list clone --> Terraria Agent
+list number -> list clone --> Autonot Command ->  WantToPlay (Job Planner?) -->  Terraria Agent
 
 SMALL TODO:
-
 - (i18n) Update locale template and translation (hito). Upload the new template to the repo. Compile .mo in Both repos.
 - (i18n) Multiple files i18n (Ex: terraria_update)
 - (terraria) (User Rights) Terraria Host users only can use on / off / milestone

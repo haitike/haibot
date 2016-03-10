@@ -7,6 +7,7 @@ COL_ENTRIES = "entries"
 
 db[COL_LISTS].create_index("name")
 db[COL_ENTRIES].create_index([("list", 1) , ("index", 1)], name="entry_index")
+db[COL_ENTRIES].create_index([("owner", "text"), ("entry","text")])
 
 if not db[COL_LISTS].find({"hidden": False}).limit(1).count():
     db[COL_LISTS].insert_one({"name":"default", "owner": "None", "index_counter": 0, "hidden": False})
@@ -59,12 +60,13 @@ def get_random_entry(listname):
         x = db[COL_ENTRIES].find({"list":listname}).limit(-1).skip(r)
         return x[0]
 
-def search_entries(expression, listname=None):
-    "HINT"
-    if listname == None:
-        "search all lists"
-    else:
-        "search only list"
+def search_entries(expression, listname):
+    list = []
+    entries = db[COL_ENTRIES].find({"list":listname, "$text": {"$search":expression}}, {"index":True,"_id":False}).sort("index")
+    for entry in entries:
+        list.append(entry["index"])
+
+    return list
 
 def has_entry_index( index, listname):
     x = db[COL_ENTRIES].find({"list":listname,"index":index}).hint("entry_index").limit(1).count()
@@ -93,8 +95,12 @@ def get_lists(enumerated=False, get_hidden=False):
         return lists
 
 def delete_list(listname):
-    result = db[COL_LISTS].delete_one({"name":listname})
-    return result.deleted_count
+    try:
+        db[COL_LISTS].delete_one({"name":listname})
+        db[COL_ENTRIES].delete_many({"list":listname})
+        return True
+    except:
+        return False
 
 def clone_list(listname):
     pass

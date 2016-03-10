@@ -21,5 +21,8 @@ Instructions:
 Commands implemented:
 - Terraria (You can get info of a Terraria server) (You can activate/desactivate the server with the bot or with the  urls :
     https:yourweb/token/server_on  / https:yourweb/token/server_off / (With host name) https:yourweb/token/server_on?hostname
-- Settings (Change bot language)
 - Lists (Manage lists)
+- Quote (Manage quotes)
+- Autonot (auto-notifications for: terraria milestone, terraria on, terraria off and play command  )
+- Play (Notify that you are ready for playing for X hours)
+- Settings (Change bot language) and Profile (users info)

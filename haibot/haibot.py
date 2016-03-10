@@ -243,6 +243,7 @@ class HaiBot(object):
         current_list = profile.get_user_value(sender.id,"current_list")
         no_writer_text = _("You have no writting rights")
         no_reader_text = _("You have no reading rights")
+        non_existent_list_text = _("Your list do not exists. Select one with \"/list use\"")
 
         if not profile.get_user_value(sender.id,"is_reader"):
             self.send_message(bot, chat, no_reader_text)
@@ -291,7 +292,7 @@ class HaiBot(object):
                             else:
                                 self.send_message(bot, chat, _("Your list is empty"))
                         else:
-                            self.send_message(bot, chat, _("Your list do not exists. Select one with \"/list use\""))
+                            self.send_message(bot, chat, non_existent_list_text )
 
                 elif args[0] == "add" or args[0] == "a":
                     if len(args) <2:
@@ -303,7 +304,7 @@ class HaiBot(object):
                                 new_index = lists.add_entry(new_entry,current_list, sender.name)
                                 self.send_message(bot, chat, _("Entry #%d was added to list \"%s\"") % (new_index, current_list))
                             else:
-                                self.send_message(bot, chat, _("Your list do not exists. Select one with \"/list use\""))
+                                self.send_message(bot, chat, non_existent_list_text )
                         else:
                             self.send_message(bot, chat, no_writer_text)
 
@@ -322,7 +323,7 @@ class HaiBot(object):
                                 except:
                                     self.send_message(bot, chat, _("Use /list delete <entry number>"))
                             else:
-                                self.send_message(bot, chat, _("Your list do not exists. Select one with \"/list use\""))
+                                self.send_message(bot, chat, non_existent_list_text )
                         else:
                             self.send_message(bot, chat, no_writer_text)
 
@@ -525,7 +526,7 @@ class HaiBot(object):
                                 except:
                                     self.send_message(bot, chat, _("Use /list done <entry number>"))
                             else:
-                                self.send_message(bot, chat, _("Your list do not exists. Select one with \"/list use\""))
+                                self.send_message(bot, chat, non_existent_list_text )
                         else:
                             self.send_message(bot, chat, no_writer_text)
 
@@ -540,10 +541,21 @@ class HaiBot(object):
                         else:
                             self.send_message(bot, chat, _("Your list is empty"))
                     else:
-                        self.send_message(bot, chat, _("Your list do not exists. Select one with \"/list use\""))
+                        self.send_message(bot, chat, non_existent_list_text )
 
                 elif args[0] == "search" or args[0] == "se":
-                    self.send_message(bot, chat, _("NOT IMPLEMENTED"))
+                    if len(args) <2:
+                        self.send_message(bot, chat, _("/quote search <words>"))
+                    else:
+                        if lists.has_list(profile.get_user_value(sender.id, "current_list")):
+                            result = lists.search_entries(" ".join(args[1:]), current_list)
+                            if result:
+                                self.send_message(bot, chat, result)
+                            else:
+                                self.send_message(bot, chat, _("No quotes were found"))
+                        else:
+                            self.send_message(bot, chat, non_existent_list_text )
+
                 else:
                     self.send_message(bot, chat, help_text)
 
@@ -596,8 +608,14 @@ class HaiBot(object):
                     self.send_message(bot, chat, _("There is no quotes"))
 
             elif args[0] == "search" or args[0] == "s" or args[0] == "se":
-                self.send_message(bot, chat, _("NOT IMPLEMENTED"))
-
+                if len(args) <2:
+                    self.send_message(bot, chat, _("/quote search <words>"))
+                else:
+                    result = lists.search_entries(" ".join(args[1:]), "quote")
+                    if result:
+                        self.send_message(bot, chat, result)
+                    else:
+                        self.send_message(bot, chat, _("No quotes were found"))
             else:
                 try:
                     if lists.has_entry_index(int(args[0]), "quote" ) :
