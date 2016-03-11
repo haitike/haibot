@@ -275,10 +275,10 @@ class HaiBot(object):
                     else:
                         if lists.has_list(current_list):
                             if entry_list:
-                                entry_text= _("%s: \n") % (current_list)
+                                entry_text= "%s: \n" % (current_list)
                                 for entry in entry_list:
                                     if entry["done"]:
-                                        entry_text += "[%d][done] %s\n" % (entry["index"], entry["entry"] )
+                                        entry_text += _("[%d][done] %s\n") % (entry["index"], entry["entry"] )
                                     else:
                                         entry_text += "[%d] %s\n" % (entry["index"], entry["entry"] )
                                 self.send_message(bot, chat, entry_text)
@@ -322,7 +322,7 @@ class HaiBot(object):
 
                 elif args[0] == "lists" or args[0] == "l":
                     if len(args) <2:
-                        self.send_message(bot, chat, _("/list lists <show:add:delete:clone>"))
+                        self.send_message(bot, chat, "/list lists <show:add:delete:clone>")
                     else:
                         if args[1] == "show" or args[1] == "s":
                             show_text = ""
@@ -395,7 +395,7 @@ class HaiBot(object):
                                     self.send_message(bot, chat, no_writer_text)
 
                         else:
-                            self.send_message(bot, chat, _("/list lists <show:add:delete:clone>"))
+                            self.send_message(bot, chat, "/list lists <show:add:delete:clone>")
 
 
                 elif args[0] == "use" or args[0] == "u":
@@ -417,7 +417,7 @@ class HaiBot(object):
 
                 elif args[0] == "writers" or args[0] == "w":
                     if len(args) <2:
-                        self.send_message(bot, chat, _("/list writers <show:add:delete:clone>"))
+                        self.send_message(bot, chat, "/list writers <show:add:delete:clone>")
                     else:
                         if args[1] == "show" or args[1] == "s":
                             show_text = ""
@@ -468,11 +468,11 @@ class HaiBot(object):
                                 else:
                                     self.send_message(bot, chat, no_writer_text)
                         else:
-                            self.send_message(bot, chat, _("/list writers <show:add:delete>"))
+                            self.send_message(bot, chat, "/list writers <show:add:delete>")
 
                 elif args[0] == "readers" or args[0] == "r":
                     if len(args) <2:
-                        self.send_message(bot, chat, _("/list readers <show:add:delete:clone>"))
+                        self.send_message(bot, chat, "/list readers <show:add:delete:clone>")
                     else:
                         if args[1] == "show" or args[1] == "s":
                             show_text = ""
@@ -523,7 +523,7 @@ class HaiBot(object):
                                 else:
                                     self.send_message(bot, chat, no_writer_text)
                         else:
-                            self.send_message(bot, chat, _("/list readers <show:add:delete>"))
+                            self.send_message(bot, chat, "/list readers <show:add:delete>")
 
                 elif args[0] == "done" or args[0] == "do":
                     if len(args) <2:
@@ -536,7 +536,7 @@ class HaiBot(object):
                                         entry, done_status = lists.toogle_done_entry(int(args[1]),current_list)
                                         if done_status:
                                             self.send_message(bot, chat,_("#%d: done (list:%s)")%(entry["index"],current_list))
-                                            self.send_message(bot, chat,"See: \list show <all:done:notdone>")
+                                            self.send_message(bot, chat,_("See: \list show <all:done:notdone>"))
                                         else:
                                             self.send_message(bot, chat,_("#%d: notdone (list:%s)")%(entry["index"],current_list))
                                     else:
@@ -553,7 +553,7 @@ class HaiBot(object):
                         entry = lists.get_random_entry(current_list)
                         if entry:
                             if entry["done"] == True:
-                                self.send_message(bot, chat, "[%d][done] %s\n" % (entry["index"], entry["entry"]))
+                                self.send_message(bot, chat, _("[%d][done] %s\n") % (entry["index"], entry["entry"]))
                             else:
                                 self.send_message(bot, chat, "[%d] %s\n" % (entry["index"], entry["entry"]))
                         else:
@@ -580,7 +580,7 @@ class HaiBot(object):
                             if lists.has_list(current_list):
                                 entry = lists.get_entry( int(args[0]), current_list)
                                 if entry["done"] == True:
-                                    self.send_message(bot, chat, "[%d][done] %s\n" % (entry["index"], entry["entry"]))
+                                    self.send_message(bot, chat, _("[%d][done] %s\n") % (entry["index"], entry["entry"]))
                                 else:
                                     self.send_message(bot, chat, "[%d] %s\n" % (entry["index"], entry["entry"]))
                             else:
@@ -598,9 +598,9 @@ class HaiBot(object):
 
         help_text = _(
             "You can add a quote, selecting a message and clicking on \"reply\" and then writting /quote\n\n"
-            "/quote search - show all quotew matching a text (s/se)\n"
+            "/quote search - show all quote matching a text (s/se)\n"
             "/quote <number> show the quote associated to a index\n"
-            "/quote delete - delete an entry from the current list (d)\n"
+            "/quote delete - delete a quote (d)\n"
             "/quote random - pick a random quote and show it (r/ra)\n"
             "/quote islist - Show the quotes as a list in the command /list (i/is)")
         if len(args) < 1:
@@ -706,12 +706,12 @@ class HaiBot(object):
                 if self.play_job_queue.running:
                     self.send_message(bot, chat, self.play_status)
                 else:
-                    self.send_message(bot, chat, "There is not \"play\" ongoing")
+                    self.send_message(bot, chat, _("There is not \"play\" ongoing"))
             elif args[0] == "stop":
                 if self.play_job_queue.running:
                     self.stop_play(bot)
                 else:
-                    self.send_message(bot, chat, "There is not \"play\" to stop.")
+                    self.send_message(bot, chat, _("There is not \"play\" to stop."))
             else:
                 self.send_message(bot, chat, help_text )
         else:
@@ -728,12 +728,12 @@ class HaiBot(object):
                         hour_since = hour.strftime("%H:%M")
                         hour_until = (hour + timedelta(hours=total_hours)).strftime("%H:%M")
                         self.play_user = sender.name
-                        self.play_status = "%s wants to play: %s (%s - %s)" % (sender.name, game, hour_since, hour_until )
-                        self.send_message(bot, chat, "A notification was sent to all subscribed users. Use /autonot for subscribing")
+                        self.play_status = _("%s wants to play: %s (%s - %s)") % (sender.name, game, hour_since, hour_until )
+                        self.send_message(bot, chat, _("A notification was sent to all subscribed users. Use /autonot for subscribing"))
                         self.autonotify(self.play_status)
                         self.play_job_queue.put(self.stop_play, total_hours*60*60, repeat=False)
                     else:
-                        self.send_message(bot, chat, "There is already a play. See /play status for info.")
+                        self.send_message(bot, chat, _("There is already a play. See /play status for info."))
             except:
                 self.send_message(bot, update.message.chat_id, help_text )
 

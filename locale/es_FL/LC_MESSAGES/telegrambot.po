@@ -7,70 +7,651 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-05 02:54+0100\n"
-"PO-Revision-Date: 2016-02-05 02:55+0100\n"
+"POT-Creation-Date: 2016-03-11 19:57+0100\n"
+"PO-Revision-Date: 2016-03-11 20:31+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.8.6\n"
+"X-Generator: Poedit 1.8.7\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Poedit-Basepath: ../../../haibot\n"
+"X-Poedit-SearchPath-0: .\n"
 
-#: temporal-nowebhook-bot.py:17
+#: haibot.py:147
 msgid "Bot was initiated. Use /help for commands."
-msgstr "The end is near. EXTERMINATE! EXTERMINATE!"
+msgstr ""
+"Je - su - cris- to. El robot del futuro, quien derrota a los malvados con "
+"besos y dulzura.\n"
+"\vJe - su - cris- to. El robot del futuro, que resuelve los problemas con "
+"paz y amoor"
 
-#: temporal-nowebhook-bot.py:20
+#: haibot.py:152
 msgid ""
 "Available Commands:\n"
-"/start - Iniciciate or Restart the bot\n"
-"/help - Show the command list.\n"
-"/terraria status/autonot/ip - Terraria options\n"
-"/list <option> <item> - Manage your lists.\n"
-"/search <engine> <word> - Search using a engine."
-msgstr "¡No soy tu chacha! Usa /terraria /list /search"
-
-#: temporal-nowebhook-bot.py:28
-msgid ""
-"/terraria status\n"
-"/terraria autonot\n"
-"/terraria ip"
+"            /start - Iniciciate or Restart the bot\n"
+"            /help - Show the command list.\n"
+"            /terraria status/log/ip/milestone/on/off - Terraria options\n"
+"            /list - Manage your lists (Use /list help)\n"
+"            /quote - Save your group chat quotes (Use /quote help)\n"
+"            /autonot on/off - Enable or disable autonotifications\n"
+"            /play - Set \"want to play to X\" for a amount of hours "
+"[Autonot]\n"
+"            /search engine word - Search using a engine.\n"
+"            /settings - Change bot options (language, etc.)\n"
+"            /profile - Show your user profile "
 msgstr ""
+"Comandos disponibles:\n"
+"            /start - Inicia o reinicia el bot\n"
+"            /help - Muestra la lista de comandos..\n"
+"            /terraria status/log/ip/milestone/on/off - Opciones de Terraria\n"
+"            /list - Administra tus listas (Ver /list help)\n"
+"            /quote - Guarda tus \"citas\" en los grupos de chat (Ver /quote "
+"help)\n"
+"            /autonot on/off - Activa o desactiva las autonotificaciones\n"
+"            /play - Indica que quieres jugar X horas a algun juego "
+"[Autonot]\n"
+"            /search engine word - Busca usando algún motor.\n"
+"            /settings - Cambia opciones en el bot: idioma, etc.\n"
+"            /profile - Muestra tu perfil o el de otros usuarios"
 
-#: temporal-nowebhook-bot.py:33
-msgid "/list <option> <item>"
-msgstr "/list <opción> <elemento>"
+#: haibot.py:169
+msgid ""
+"Use one of the following commands:\n"
+"            /terraria status - Server status (s)\n"
+"            /terraria log <number> - Show Server history (l)\n"
+"            /terraria ip - Display server IP (i)\n"
+"            /terraria milestone - Add a milestone to server (m)[Autonot]\n"
+"            /terraria on/off manually change server status [Autonot]"
+msgstr ""
+"Use one of the following commands:\n"
+"            /terraria status - Estado del servidor  (s)\n"
+"            /terraria log <number> - Muestra la historia del servidor (l)\n"
+"            /terraria ip - Muestra la dirección IP (i)\n"
+"            /terraria milestone - Añade un \"hito\" al servidor (m)"
+"[Autonot]\n"
+"            /terraria on/off cambiar el estado del servidor manualmente "
+"[Autonot]"
 
-#: temporal-nowebhook-bot.py:36
-msgid "/search <engine> <word>"
-msgstr "/search <motor> <palabra>"
+#: haibot.py:189
+msgid ""
+"/terraria log <number> - Number of log entries to show\n"
+"/terraria log m - Show only milestones"
+msgstr ""
+"/terraria log <number> - Numero de entradas del historial a mostrar\n"
+"/terraria log m - Muestra solo los \"hitos\""
 
-#: temporal-nowebhook-bot.py:39
-msgid "Use /settings <language/l> <es/en/fv>"
-msgstr "/settings <language/l> <es/en/fv>"
+#: haibot.py:196
+msgid "There is no Log History"
+msgstr "No hay historial."
 
-#: temporal-nowebhook-bot.py:46
-msgid "Language changed to English"
-msgstr "El bot ahora habla inglés."
+#: haibot.py:199
+msgid ""
+"This is a legacy (v0.1) command.\n"
+" Use the new command: /autonot <on/off> "
+msgstr ""
+"Este es un comando obsoleto de la v0.1\n"
+"Usa el nuevo comando: /autonot <on/off>"
 
-#: temporal-nowebhook-bot.py:49
-msgid "Language changed to Spanish"
-msgstr "El bot ahora habla español."
+#: haibot.py:211
+msgid "Use /terraria milestone <TEXT>"
+msgstr "Usa /terraria milestone <TEXT>"
 
-#: temporal-nowebhook-bot.py:52
-msgid "Language changed to Flavoured"
-msgstr "El bot sigue siendo muy sabrosón."
+#: haibot.py:218
+msgid ""
+"Note: You can set a IP with:\n"
+"/terraria on <your ip>"
+msgstr ""
+"Nota: Puedes establecer una dirección IP con:\n"
+"/terraria on <IP>"
 
-#: temporal-nowebhook-bot.py:55
-msgid "Unknown language code"
-msgstr "no conozco ese idioma, lo siento tio."
+#: haibot.py:236
+msgid "You have no writting rights"
+msgstr "No perteneces a la Jet People"
 
-#: temporal-nowebhook-bot.py:60
+#: haibot.py:237
+msgid "You have no reading rights"
+msgstr "Lo siento, pero no admitimos anon"
+
+#: haibot.py:238
+#, python-format
+msgid "List \"%s\" does not exist. Select another list with /list use"
+msgstr "La lista \"%s\" no existe. Selecciona otra lista con /list use"
+
+#: haibot.py:244
+msgid ""
+"Use one of the following commands:\n"
+"                /list show <all:done:notdone> - show entries in the current "
+"list (s)\n"
+"                /list <number> - Show only one entry using his index\n"
+"                /list add - add a new entry to the current list (a)\n"
+"                /list delete - delete an entry from the current list (d)\n"
+"                /list lists <show:add:delete:clone> - manage lists (l)\n"
+"                /list use - select a list (makes the list the current list) "
+"(u)\n"
+"                /list writers <show:add:delete> - manage admins for the list "
+"(w)\n"
+"                /list readers <show:add:delete> - manage readers for the "
+"list (if apply) (r)\n"
+"                /list done - mark an entry as <done> (do)\n"
+"                /list random - pick a random entry and show it (ra)\n"
+"                /list search - show all entries matching a text (se)"
+msgstr ""
+"Usa uno de los siguientes comandos\n"
+"                /list show <all:done:notdone> - muestra las entradas de la "
+"lista actual. (s)\n"
+"                /list <number> - muestra una entrada indicando su número de "
+"índice\n"
+"                /list add - añade una nueva entrada a la lista actual (a)\n"
+"                /list delete - borra una entrada de la lista actual(d)\n"
+"                /list lists <show:add:delete:clone> - administrar todas las "
+"listas (l)\n"
+"                /list use - selecciona una lista como lista actual (u)\n"
+"                /list writers <show:add:delete> - administra los miembros de "
+"la Jet People para las listas (w)\n"
+"                /list readers <show:add:delete> - indica que alguien es Anon "
+"y no puede leer las listas (r)\n"
+"                /list done - marca una entrada como \"hecho\" (do)\n"
+"                /list random - muestra una entrada al azar. (ra)\n"
+"                /list search - muestra los índices de las entradas que "
+"coinciden con la búsqueda (se)"
+
+#: haibot.py:274
+msgid "Use /list show <all:done:notdone>"
+msgstr "Usa /list show <all:done:notdone"
+
+#: haibot.py:281 haibot.py:556 haibot.py:583
+#, python-format
+msgid "[%d][done] %s\n"
+msgstr "[%d][hecho] %s\n"
+
+#: haibot.py:286 haibot.py:560
+msgid "Your list is empty"
+msgstr "Tu lista está vacía"
+
+#: haibot.py:292
+msgid "/list add <name>"
+msgstr "/list add <nombre>"
+
+#: haibot.py:298
+#, python-format
+msgid "Entry #%d was added to list \"%s\""
+msgstr "La entrada #%d fue añadida a la lista \"%s\""
+
+#: haibot.py:306
+msgid "/list delete <entry index>"
+msgstr "/list delete <índice>"
+
+#: haibot.py:313
+#, python-format
+msgid "Entry #%d was deleted from list \"%s\"."
+msgstr "La entrada #%d fue borrada de la lista \"%s\"."
+
+#: haibot.py:315
+msgid "The entry number does not exist. Use /list show"
+msgstr "El número de índice de esa entrada no existe. Usa /list show"
+
+#: haibot.py:317
+msgid "Use /list delete <entry number>"
+msgstr "Usa /list delete <índice>"
+
+#: haibot.py:334
+msgid "There is no lists. Create one."
+msgstr "No hay listas. Crea una."
+
+#: haibot.py:337
+msgid "/list lists add <something>"
+msgstr "/list lists add <nombre>"
+
+#: haibot.py:342
+#, python-format
+msgid "\"%s\" already exists!"
+msgstr "¡\"%s\" ya existe!"
+
+#: haibot.py:345
+#, python-format
+msgid "\"%s\" list was created. Switch with /list use %d"
+msgstr "La lista\"%s\" fue creada. Usa /list use %d para cambiar a ella."
+
+#: haibot.py:351
+msgid "/list lists delete <list index>"
+msgstr "/list lists delete <índice de lista>"
+
+#: haibot.py:362
+#, python-format
+msgid "\"%s\" list was deleted. Use \"show\" for the new order. "
+msgstr "La lista \"%s\" fue borrada. Usa \"show\" para mostrar el nuevo orden."
+
+#: haibot.py:366
+msgid ""
+"The list could not be deleted. Use:\n"
+"/list lists delete <list index>"
+msgstr ""
+"La lista no pudo borrarse. Usa:\n"
+"/list lists delete <índice>"
+
+#: haibot.py:373
+msgid "Use: /list clone <list_index> new name"
+msgstr "Usa: /list clone <índice> nuevo nombre"
+
+#: haibot.py:380
+#, python-format
+msgid "Cannot be cloned. \"%s\" already exists!"
+msgstr "No se pudo clonar. \"%s\" ya existe."
+
+#: haibot.py:387
+#, python-format
+msgid "\"%s\" list was cloned to \"%s\" and entries were ordered."
+msgstr ""
+"La lista \"%s\" fue cloanada a \"%s\" y las entradas fueron reordenadas."
+
+#: haibot.py:392
+msgid ""
+"The list could not be cloned. Use:\n"
+"Use: /list clone <list_index> new name"
+msgstr ""
+"La lista no pudo clonarse. Usa:\n"
+"/list clone <índice> nuevo nombre"
+
+#: haibot.py:403
+msgid ""
+"/list use <list ID>\n"
+"Use /list lists show for IDs"
+msgstr ""
+"/list use <índice>\n"
+"Usa /list lists show para ver los índices"
+
+#: haibot.py:411
+#, python-format
+msgid "%s selected list: \"%s\""
+msgstr "%s lista seleccionada: \"%s\""
+
+#: haibot.py:416
+msgid "/Invalid ID. Use /list lists show"
+msgstr " Índice inválido. Usa  /list lists show"
+
+#: haibot.py:429
+msgid "There is no writers."
+msgstr "No hay ningún miembro de la gloriosa Jet People."
+
+#: haibot.py:433
+msgid ""
+"/list writer add ID.\n"
+" Use \"/profile list\" for a list of known IDs"
+msgstr ""
+"/list writer add ID.\n"
+" Usa \"/profile list\" para una lista de IDs conocidos."
+
+#: haibot.py:442
+#, python-format
+msgid "writer rights for (ID:%d) were added"
+msgstr "(ID:%d) es ahora un selecto miembro de la Jet People."
+
+#: haibot.py:451
+msgid ""
+"/list writer delete ID.\n"
+" Use \"/list writers show\" for a list of writers IDs"
+msgstr ""
+"/list writer delete ID.\n"
+" Usa \"/list writers show\" para una lista de ID conocidos"
+
+#: haibot.py:461
+#, python-format
+msgid "writer rights for (ID:%d) were deleted"
+msgstr " (ID:%d) fue expulsado de la Jet People"
+
+#: haibot.py:463 haibot.py:518
+msgid "You can't delete your own rights"
+msgstr "¿Estás loco? Nadie escapa de la Jet People"
+
+#: haibot.py:484
+msgid "There is no readers."
+msgstr "Todo el mundo es Anon."
+
+#: haibot.py:488
+msgid ""
+"/list reader add ID.\n"
+" Use \"/profile list\" for a list of known IDs"
+msgstr ""
+"/list reader add ID.\n"
+" Usa \"/profile list\" para una lista de IDs conocidos"
+
+#: haibot.py:497
+#, python-format
+msgid "reader rights for (ID:%d) were added"
+msgstr "(ID:%d) ha dejando de ser Anon"
+
+#: haibot.py:506
+msgid ""
+"/list reader delete ID.\n"
+" Use \"/list readers show\" for a list of readers IDs"
+msgstr ""
+"/list reader delete ID.\n"
+" Usa \"/list readers show\"  para una lista de IDs conocidos"
+
+#: haibot.py:516
+#, python-format
+msgid "reader rights for (ID:%d) were deleted"
+msgstr "(ID:%d) es ahora un miserable Anon"
+
+#: haibot.py:530
+msgid "/list done <entry index>"
+msgstr "/list done <índice>"
+
+#: haibot.py:538
+#, python-format
+msgid "#%d: done (list:%s)"
+msgstr "#%d: hecho (lista:%s)"
+
+#: haibot.py:539
+msgid "See: \\list show <all:done:notdone>"
+msgstr "Vease: \\list show <all:done:notdone>"
+
+#: haibot.py:541
+#, python-format
+msgid "#%d: notdone (list:%s)"
+msgstr "#%d: sin hacer (lista:%s)"
+
+#: haibot.py:543
+msgid "The entry number does not exist. Use /list show all"
+msgstr "El índice de la entrada no existe. Vease /list show all"
+
+#: haibot.py:545
+msgid "Use /list done <entry number>"
+msgstr "Usa /list done <índice>"
+
+#: haibot.py:566
+msgid "/list search <words>"
+msgstr "/list search <palabras>"
+
+#: haibot.py:573
+msgid "No entries were found"
+msgstr "No se encontró ninguna entrada"
+
+#: haibot.py:589
+msgid "Invalid number. Use /list show o /list search <word>"
+msgstr "Número inválido. Usa /list show o /list search <palabra>"
+
+#: haibot.py:597
+msgid "You have no writting rights. See /list writers"
+msgstr "No eres parte de la grandiosa Jet People. Mirate si eso: /list writers"
+
+#: haibot.py:600
+msgid ""
+"You can add a quote, selecting a message and clicking on \"reply\" and then "
+"writting /quote\n"
+"\n"
+"/quote search - show all quote matching a text (s/se)\n"
+"/quote <number> show the quote associated to a index\n"
+"/quote delete - delete a quote (d)\n"
+"/quote random - pick a random quote and show it (r/ra)\n"
+"/quote islist - Show the quotes as a list in the command /list (i/is)"
+msgstr ""
+"Puedes añadir una cita, seleccionando un mensaje y pulsando en \"responder\" "
+"y despues escribiendo /quote\n"
+"\n"
+"/quote search - muestra una cita según la búsqueda (s/se)\n"
+"/quote <number> muestra la cita asociada a un índice\n"
+"/quote delete - borra una cita(d)\n"
+" \n"
+"/quote random - selecciona una cita al azar(r/ra)\n"
+"/quote islist - muestra todas las citas como una lista en el comando /list "
+"(i/is)"
+
+#: haibot.py:612
+msgid "Error: There is not Quote List in database. Use: /list lists add quote"
+msgstr ""
+"Error: No hay lista de citas en la base de datos. Usa: /list lists add quote"
+
+#: haibot.py:615
+#, python-format
+msgid "Quote #%d was recorded"
+msgstr "Quote #%d fue registrado"
+
+#: haibot.py:621
+msgid "/quote delete <entry index>"
+msgstr "/quote delete <índice>"
+
+#: haibot.py:627
+#, python-format
+msgid "Quote #%d was deleted."
+msgstr "Se borro la cita #%d."
+
+#: haibot.py:629
+msgid "The quote number does not exist. Use /quote search <word>"
+msgstr "El número de cita no existe. Usa /quote search <palabra>"
+
+#: haibot.py:631
+msgid "Use /quote delete <entry number>"
+msgstr "Usa /quote delete <índice>"
+
+#: haibot.py:641
+msgid "There is no quotes"
+msgstr "No hay citas"
+
+#: haibot.py:645
+msgid "/quote search <words>"
+msgstr "/quote search <palabras>"
+
+#: haibot.py:651
+msgid "No quotes were found"
+msgstr "No se encontraron citas"
+
+#: haibot.py:656
+msgid ""
+"The quotes are now a list.\n"
+"Be careful: all the quotes can now be deleted, cloned or full showed"
+msgstr ""
+"Las citas son ahora una lista.\n"
+"Cuidado: Todas las citas pueden ahora ser borradas, clonadas o mostradas."
+
+#: haibot.py:658
+msgid "The quotes are now hidden in list command."
+msgstr "Las citas estan ahora ocultas para el comando /list"
+
+#: haibot.py:668
+msgid "Invalid number. Use /quote search <word>"
+msgstr "Número no válido. Usa /quote search <palabra>"
+
+#: haibot.py:679 haibot.py:691
+msgid " was added to auto notifications."
+msgstr " fue añadido a las auto-notificaciones."
+
+#: haibot.py:682 haibot.py:688
+msgid " was removed from auto notifications."
+msgstr " fue eliminado de las auto-notificaciones"
+
+#: haibot.py:697
+msgid ""
+"/play <hours> <game>  - Display that you are playing a game for X hours. "
+"(Example: play 2 dota2 ). The message will be sent to users with autonot "
+"enabled. Another notification will be sent automatically when the time "
+"indicated elapses. \n"
+"\n"
+"/play status - Display the play message if there is one active \n"
+"/play stop - Manually stops the play, instead of waiting that the time "
+"elapses "
+msgstr ""
+"/play <horas> <juego>  - Índica que estarás jugando a un juego durante X "
+"horas. (Ejemplo: /play 2 dota2). El mensaje será enviado a los usuarios con "
+"Autonot activado. Otra notificación será enviada automáticamente cuando "
+"transcurra el número de horas indicadas. \n"
+"\n"
+"/play status - Muestra el mensaje de estado si hay alguien jugando \n"
+"/play stop - Para \"play\" manualmente, en lugar de esperar a que transcurra "
+"el tiempo indicado."
+
+#: haibot.py:709
+msgid "There is not \"play\" ongoing"
+msgstr "No hay nadie jugando."
+
+#: haibot.py:714
+msgid "There is not \"play\" to stop."
+msgstr "No se puede parar porque no hay nadie jugando."
+
+#: haibot.py:721
+#, python-format
+msgid "The max number of hours allowed is %d"
+msgstr "El número máximo de horas permitido es %d"
+
+#: haibot.py:723
+msgid "Number of hours must be higher than 0"
+msgstr "El número de horas debe ser mayor a cero"
+
+#: haibot.py:731
+#, python-format
+msgid "%s wants to play: %s (%s - %s)"
+msgstr "%s quiere jugar a: %s (%s - %s)"
+
+#: haibot.py:732
+msgid ""
+"A notification was sent to all subscribed users. Use /autonot for subscribing"
+msgstr ""
+"Una notificación a sido enviada a los usuarios subscritos. Usa /autonot para "
+"subscribirte"
+
+#: haibot.py:736
+msgid "There is already a play. See /play status for info."
+msgstr "Ya hay alguien jugando. Usa /play status para más información."
+
+#: haibot.py:742
+msgid "NOT IMPLEMENTED"
+msgstr "Ya quisieras que esto funcionase"
+
+#: haibot.py:747
+msgid "Language codes:\n"
+msgstr "Códigos de idioma:\n"
+
+#: haibot.py:751
+msgid ""
+"Use /settings language language_code\n"
+"\n"
+msgstr ""
+"Utiliza /settings language código\n"
+"\n"
+
+#: haibot.py:761
+#, python-format
+msgid "Language changed to %s"
+msgstr "Idioma cambiado a %s"
+
+#: haibot.py:767
+msgid ""
+"Unknown language code\n"
+"\n"
+msgstr ""
+"Código de idioma desconocido\n"
+"\n"
+
+#: haibot.py:780
+msgid "Could not get user profile"
+msgstr "No se pudo obtener el perfil de usuario"
+
+#: haibot.py:789
+msgid "Could not get profile list"
+msgstr "No se pudo conseguir la lista de perfiles."
+
+#: haibot.py:799
+#, python-format
+msgid "Could not get profile from user <%s>"
+msgstr "No se puede obtener el perfil del usuario <%s>"
+
+#: haibot.py:801
+msgid "Use a profile ID with only numbers"
+msgstr "Utiliza un ID de perfil que solo tenga números"
+
+#: haibot.py:807
 #, python-format
 msgid "%s is a unknown command. Use /help for available commands."
 msgstr "%s no existe. ¿Que tal si usas /help en vez de dar por culo?"
+
+#: haibot.py:840
+#, python-format
+msgid "%s stopped playing."
+msgstr "%s dejó de jugar."
+
+#: models.py:41
+#, python-format
+msgid "(%s) Terraria server is On (IP:%s)"
+msgstr "(%s) El servidor de Terraria está encendido (IP:%s)"
+
+#: models.py:43
+#, python-format
+msgid "(%s) Terraria server is Off"
+msgstr "(%s) El servidor de Terraria está apagado"
+
+#: models.py:57
+#, python-format
+msgid "[%s] (%s) Milestone: %s"
+msgstr "[%s] (%s) Hito: %s"
+
+#: models.py:59
+#, python-format
+msgid "(%s) Milestone: %s"
+msgstr "(%s) Hito: %s"
+
+#: terraria.py:48
+msgid "There is no IP"
+msgstr "No hay ninguna IP"
+
+#~ msgid ""
+#~ "You can add a quote, selecting a message and clicking on \"reply\" and "
+#~ "then writting /quote\n"
+#~ "\n"
+#~ "/quote search - show all quotew matching a text (s/se)\n"
+#~ "/quote <number> show the quote associated to a index\n"
+#~ "/quote delete - delete an entry from the current list (d)\n"
+#~ "/quote random - pick a random quote and show it (r/ra)\n"
+#~ "/quote islist - Show the quotes as a list in the command /list (i/is)"
+#~ msgstr ""
+#~ "Puedes añadir una \"cita\" seleccionando un mensaje y pulsando en "
+#~ "\"responder\" y despues escribiendo /quote\n"
+#~ "\n"
+#~ "/quote search - muestra todas las citas que coinciden con la búsqueda (s/"
+#~ "se)\n"
+#~ "/quote <number> muestra la cita asociada al índice\n"
+#~ "/quote delete - borra una cita (d)\n"
+#~ "/quote random - muestra una cita al azar (r/ra)\n"
+#~ "/quote islist - muestra las citas como una lista en el comando /list (i/"
+#~ "is)"
+
+#~ msgid ""
+#~ "Available Commands:\n"
+#~ "/start - Iniciciate or Restart the bot\n"
+#~ "/help - Show the command list.\n"
+#~ "/terraria status/autonot/ip - Terraria options\n"
+#~ "/list <option> <item> - Manage your lists.\n"
+#~ "/search <engine> <word> - Search using a engine."
+#~ msgstr ""
+#~ "Comandos disponibles:\n"
+#~ "/start - Inicia o reinicia el bot\n"
+#~ "/help - Muestra la lista de comandos.\n"
+#~ "/terraria status/autonot/ip - Opciones del servidor de Terraria.\n"
+#~ "/list <opción> <elemento> - Gestiona tus listas.\n"
+#~ "/search <motor> <palabra> - Busca usando un motor."
+
+#~ msgid "/list <option> <item>"
+#~ msgstr "/list <opción> <elemento>"
+
+#~ msgid "/search <engine> <word>"
+#~ msgstr "/search <motor> <palabra>"
+
+#~ msgid "Use /settings <language/l> <es/en/fv>"
+#~ msgstr "Para cambiar el idioma usa /settings <language/l> <es/en/fv>"
+
+#~ msgid "Language changed to English"
+#~ msgstr "El idioma fue cambiado a inglés."
+
+#~ msgid "Language changed to Spanish"
+#~ msgstr "El idioma fue cambiado a español."
+
+#~ msgid "Language changed to Flavoured"
+#~ msgstr "El idioma fue cambiado a \"flavoured\""
+
+#~ msgid "Unknown language code"
+#~ msgstr "Código de idioma desconocido."
 
 #~ msgid ""
 #~ "Available Commands:\n"
@@ -78,10 +659,16 @@ msgstr "%s no existe. ¿Que tal si usas /help en vez de dar por culo?"
 #~ "/help - Show the command list.\n"
 #~ "/list <option> <item> - Manage your lists.\n"
 #~ "/search <engine> <word> - Search using a engine."
-#~ msgstr "¡No soy tu chacha! Usa /terraria /list /seach ."
+#~ msgstr ""
+#~ "Comandos disponibles:\n"
+#~ "/start - Inicia o reinicia el bot.\n"
+#~ "/help - Muestra la lista de comandos.\n"
+#~ "/list <opción> <elemento> - Administra tus listas.\n"
+#~ "/search <motor> <palabra> - Busca usando un motor."
 
 #~ msgid "STFU"
 #~ msgstr "Cierra la boca, ¡no soy tu chacha!"
 
 #~ msgid "%s is a unknown command. Use /help for avaible commands."
-#~ msgstr "%s es un comando desconocido. Usa /help para ver los comandos disponibles."
+#~ msgstr ""
+#~ "%s es un comando desconocido. Usa /help para ver los comandos disponibles."
