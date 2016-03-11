@@ -128,6 +128,8 @@ class HaiBot(object):
         self.dispatcher.addTelegramCommandHandler("list", self.command_list)
         self.dispatcher.addTelegramCommandHandler("quote", self.command_quote)
         self.dispatcher.addTelegramCommandHandler("search", self.command_search)
+        self.dispatcher.addTelegramCommandHandler("autonot", self.command_autonot)
+        self.dispatcher.addTelegramCommandHandler("play", self.command_play)
         self.dispatcher.addTelegramCommandHandler("settings",self.command_settings)
         self.dispatcher.addTelegramCommandHandler("profile",self.command_profile)
         self.dispatcher.addUnknownTelegramCommandHandler(self.command_unknown)
@@ -146,9 +148,11 @@ class HaiBot(object):
             """Available Commands:
             /start - Iniciciate or Restart the bot
             /help - Show the command list.
-            /terraria status/log/autonot/ip - Terraria options
-            /list option item - Manage your lists.
-            /quote <number>/add/delete/random/search - Save your group chat quotes
+            /terraria status/log/ip/milestone/on/off - Terraria options
+            /list - Manage your lists (Use /list help)
+            /quote - Save your group chat quotes (Use /quote help)
+            /autonot on/off - Enable or disable autonotifications
+            /play - Set \"want to play to X\" for a amount of minutes [Autonot]
             /search engine word - Search using a engine.
             /settings - Change bot options (language, etc.)
             /profile - Show your user profile """))
@@ -161,10 +165,9 @@ class HaiBot(object):
             """Use one of the following commands:
             /terraria status - Server status (s)
             /terraria log <number> - Show Server history (l)
-            /terraria autonot <on/off> - Toogle Autonotifications to user (a)
             /terraria ip - Display server IP (i)
-            /terraria milestone - Add a milestone to server (m)
-            /terraria on/off manually change server status""")
+            /terraria milestone - Add a milestone to server (m)[Autonot]
+            /terraria on/off manually change server status [Autonot]""")
         if len(args) < 1:
             self.send_message(bot,chat, help_text)
         else:
@@ -189,23 +192,7 @@ class HaiBot(object):
                     self.send_message(bot, chat, _("There is no Log History"))
 
             elif args[0] == "autonot" or args[0] == "a":
-                if len(args) > 1:
-                    if args[1] == "on":
-                        profile.set_user_value(sender.id,"in_autonot", True)
-                        self.send_message(bot, chat, sender.name+_(" was added to auto notifications."))
-                    elif args[1] == "off":
-                        profile.set_user_value(sender.id,"in_autonot", False)
-                        self.send_message(bot, chat, sender.name+_(" was removed from auto notifications."))
-                    else:
-                        self.send_message(bot, chat, "/terraria autonot\n/terraria autonot on/off")
-                else:
-                    if profile.get_user_value(sender.id, "in_autonot"):
-                        profile.set_user_value(sender.id,"in_autonot", False)
-                        self.send_message(bot, chat, sender.name+_(" was removed from auto notifications."))
-                    else:
-                        profile.set_user_value(sender.id,"in_autonot", True)
-                        self.send_message(bot, chat, sender.name+_(" was added to auto notifications."))
-
+                self.send_message(bot, chat, _("This is a legacy (v0.1) command.\n Use the new command: /autonot <on/off> "))
 
             elif args[0] == "ip" or args[0] == "i":
                 self.send_message(bot, chat, self.terraria.get_ip())
@@ -679,8 +666,33 @@ class HaiBot(object):
                     self.send_message(bot, chat, help_text)
 
     @save_user
+    def command_autonot(self, bot, update, args):
+        sender = update.message.from_user
+        chat = update.message.chat_id
+        if len(args) > 0:
+            if args[0] == "on":
+                profile.set_user_value(sender.id,"in_autonot", True)
+                self.send_message(bot, chat, sender.name+_(" was added to auto notifications."))
+            elif args[0] == "off":
+                profile.set_user_value(sender.id,"in_autonot", False)
+                self.send_message(bot, chat, sender.name+_(" was removed from auto notifications."))
+            else:
+                self.send_message(bot, chat, "/terraria autonot\n/terraria autonot on/off")
+        else:
+            if profile.get_user_value(sender.id, "in_autonot"):
+                profile.set_user_value(sender.id,"in_autonot", False)
+                self.send_message(bot, chat, sender.name+_(" was removed from auto notifications."))
+            else:
+                profile.set_user_value(sender.id,"in_autonot", True)
+                self.send_message(bot, chat, sender.name+_(" was added to auto notifications."))
+
+    @save_user
+    def command_play(self, bot, update, args):
+        self.send_message(bot, update.message.chat_id, _("NOT IMPLEMENTED"))
+
+    @save_user
     def command_search(self, bot, update, args):
-        self.send_message(bot, update.message.chat_id, _("/search engine word"))
+        self.send_message(bot, update.message.chat_id, _("NOT IMPLEMENTED"))
 
     @save_user
     def command_settings(self, bot,update, args):

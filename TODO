@@ -1,5 +1,5 @@
 WORKING ORDER:
-list number -> list clone --> Autonot Command ->  WantToPlay (Job Planner?) -->  i18n --> v0.2 -> Terraria Agent
+WantToPlay (Job Planner?) -->  i18n --> v0.2 -> Terraria Agent
 
 SMALL TODO:
 - (i18n) Update locale template and translation (hito). Upload the new template to the repo. Compile .mo in Both repos.
