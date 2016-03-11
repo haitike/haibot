@@ -17,6 +17,7 @@ except ImportError:
     import ConfigParser as configparser  # Python 2
 
 DEFAULT_LANGUAGE = "en_EN"
+MAX_PLAY_HOURS = 5
 
 def translation_install(translation): # Comnpability with both python 2 / 3
     kwargs = {}
@@ -56,6 +57,8 @@ class HaiBot(object):
 
     def __init__(self):
         self.terraria = Terraria()
+        self.play_status = None
+        self.play_user = None
 
         #LANGUAGE STUFF
         self.language_list = os.listdir(haibot.config.get("haibot","LOCALE_DIR"))
@@ -71,6 +74,7 @@ class HaiBot(object):
 
         # bot INICIALIZATION
         self.updater = Updater(token=haibot.config.get("haibot","TOKEN"))
+        self.play_job_queue = self.updater.job_queue
         self.dispatcher = self.updater.dispatcher
         self.add_handlers()
 
@@ -134,9 +138,9 @@ class HaiBot(object):
         self.dispatcher.addTelegramCommandHandler("profile",self.command_profile)
         self.dispatcher.addUnknownTelegramCommandHandler(self.command_unknown)
         #self.dispatcher.addErrorHandler(self.error_handle)
-        self.dispatcher.addStringCommandHandler("terraria_on", self.terraria_on)
-        self.dispatcher.addStringCommandHandler("terraria_off", self.terraria_off)
-        self.dispatcher.addStringCommandHandler("notify", self.notify)
+        self.dispatcher.addStringCommandHandler("terraria_on", self.stringcommand_terraria_on)
+        self.dispatcher.addStringCommandHandler("terraria_off", self.stringcommand_terraria_off)
+        self.dispatcher.addStringCommandHandler("notify", self.stringcommand_notify)
 
     @save_user
     def command_start(self, bot, update, args):
@@ -152,7 +156,7 @@ class HaiBot(object):
             /list - Manage your lists (Use /list help)
             /quote - Save your group chat quotes (Use /quote help)
             /autonot on/off - Enable or disable autonotifications
-            /play - Set \"want to play to X\" for a amount of minutes [Autonot]
+            /play - Set \"want to play to X\" for a amount of hours [Autonot]
             /search engine word - Search using a engine.
             /settings - Change bot options (language, etc.)
             /profile - Show your user profile """))
@@ -688,7 +692,47 @@ class HaiBot(object):
 
     @save_user
     def command_play(self, bot, update, args):
-        self.send_message(bot, update.message.chat_id, _("NOT IMPLEMENTED"))
+        sender = update.message.from_user
+        chat = update.message.chat_id
+        help_text = _("/play <hours> <game>  - Display that you are playing a game for X hours. "
+                      "(Example: play 2 dota2 ). The message will be sent to users with autonot enabled. "
+                      "Another notification will be sent automatically when the time indicated elapses. \n\n"
+                      "/play status - Display the play message if there is one active \n"
+                      "/play stop - Manually stops the play, instead of waiting that the time elapses ")
+        if len(args) < 1:
+            self.send_message(bot, chat, help_text )
+        if len(args) < 2:
+            if args[0] == "status":
+                if self.play_job_queue.running:
+                    self.send_message(bot, chat, self.play_status)
+                else:
+                    self.send_message(bot, chat, "There is not \"play\" ongoing")
+            elif args[0] == "stop":
+                if self.play_job_queue.running:
+                    self.stop_play(bot)
+                else:
+                    self.send_message(bot, chat, "There is not \"play\" to stop.")
+            else:
+                self.send_message(bot, chat, help_text )
+        else:
+            try:
+                hours = int(args[0])
+                game =  " ".join(args[1:])
+                if hours > MAX_PLAY_HOURS:
+                    self.send_message(bot, chat, _("The max number of hours allowed is %d") % (MAX_PLAY_HOURS))
+                elif hours < 1:
+                    self.send_message(bot, chat, _("Number of hours must be higher than 0"))
+                else:
+                    if not self.play_job_queue.running:
+                        self.play_user = sender.name
+                        self.play_status = "%s wants to play: %s (For %d hours)" % (sender.name, game, hours )
+                        self.send_message(bot, chat, "A notification was sent to all subscribed users. Use /autonot for subscribing")
+                        self.autonotify(self.play_status)
+                        self.play_job_queue.put(self.stop_play, hours*60*60, repeat=False)
+                    else:
+                        self.send_message(bot, chat, "There is already a play. See /play status for info.")
+            except:
+                self.send_message(bot, update.message.chat_id, help_text )
 
     @save_user
     def command_search(self, bot, update, args):
@@ -759,6 +803,27 @@ class HaiBot(object):
     def command_unknown(self, bot, update,args):
         self.send_message(bot, update.message.chat_id, _("%s is a unknown command. Use /help for available commands.") % (update.message.text))
 
+    # /terraria_on IP user
+    def stringcommand_terraria_on(self, bot, update, args):
+        if len(args) > 1:
+            text = self.terraria.change_status(True, " ".join(args[1:]), args[0])
+        else:
+            text = self.terraria.change_status(True)
+        self.autonotify(text)
+
+    # /terraria_off user
+    def stringcommand_terraria_off(self, bot, update, args):
+        if len(args) > 0:
+            text = self.terraria.change_status(False, " ".join(args[0:]))
+        else:
+            text = self.terraria.change_status(False)
+        self.autonotify(text)
+
+    # /notify ID text
+    def stringcommand_notify(self, bot, update, args):
+        self.send_message(bot, int(args[0]), " ".join(args[1:]))
+
+
     def autonotify(self, text, check_double=False, previous_chat_id=None ):
         autonot_list = profile.get_users("in_autonot")
         for user in autonot_list:
@@ -768,25 +833,11 @@ class HaiBot(object):
                 text_to_queue = str("/notify %s %s" % (user["user_id"], text))
                 self.update_queue.put(text_to_queue)
 
-    # /terraria_on IP user
-    def terraria_on(self, bot, update, args):
-        if len(args) > 1:
-            text = self.terraria.change_status(True, " ".join(args[1:]), args[0])
-        else:
-            text = self.terraria.change_status(True)
-        self.autonotify(text)
-
-    # /terraria_of user
-    def terraria_off(self, bot, update, args):
-        if len(args) > 0:
-            text = self.terraria.change_status(False, " ".join(args[0:]))
-        else:
-            text = self.terraria.change_status(False)
-        self.autonotify(text)
-
-    # /notify ID text
-    def notify(self, bot, update, args):
-        self.send_message(bot, int(args[0]), " ".join(args[1:]))
+    def stop_play(self,bot):
+            self.autonotify(_("%s stopped playing.") % (self.play_user))
+            self.play_job_queue.stop()
+            self.play_status = None
+            self.play_user = None
 
     def send_message(self, bot, chat_id, text, with_markdown=False):
         try:
