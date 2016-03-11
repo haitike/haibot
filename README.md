@@ -6,7 +6,7 @@ Compability:
 
 Requirements:
 - python-telegram-bot
-- pymongo
+- pymongo 3
 - pytz
 
 Instructions:

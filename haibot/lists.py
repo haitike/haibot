@@ -105,6 +105,12 @@ def delete_list(listname):
 def clone_list(listname):
     pass
 
+def toogle_hidden_list(listname):
+    is_hidden = db[COL_LISTS].find_one({"name":listname}, {"hidden":True, "_id":False})["hidden"]
+    db[COL_LISTS].update({"name":listname}, {"$set" : {"hidden" : not is_hidden}})
+    return not is_hidden
+
+
 def has_list(listname):
     if listname in get_lists(get_hidden=True):
         return True

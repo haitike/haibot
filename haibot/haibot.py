@@ -244,7 +244,7 @@ class HaiBot(object):
         sender_is_writer = profile.get_user_value(sender.id, "is_writer")
         no_writer_text = _("You have no writting rights")
         no_reader_text = _("You have no reading rights")
-        non_existent_list_text = _("Your list do not exists. Select one with \"/list use\"")
+        non_existent_list_text = _("List \"%s\" does not exist. Select another list with /list use") % (current_list)
 
         if not profile.get_user_value(sender.id,"is_reader"):
             self.send_message(bot, chat, no_reader_text)
@@ -584,14 +584,15 @@ class HaiBot(object):
             "/quote search - show all quotew matching a text (s/se)\n"
             "/quote <number> show the quote associated to a index\n"
             "/quote delete - delete an entry from the current list (d)\n"
-            "/quote random - pick a random quote and show it (r/ra)")
+            "/quote random - pick a random quote and show it (r/ra)\n"
+            "/quote islist - Show the quotes as a list in the command /list (i/is)")
         if len(args) < 1:
             if update.message.reply_to_message:
                 username = update.message.reply_to_message.from_user.name
                 new_quote = update.message.reply_to_message.text
                 new_index = lists.add_entry(new_quote, "quote", username)
                 if not new_index:
-                    self.send_message(bot, chat, _("Error: There is not Quote List in database."))
+                    self.send_message(bot, chat, _("Error: There is not Quote List in database. Use: /list lists add quote"))
                     haibot.logger.warning("There is not Quote List in database.")
                 else:
                     self.send_message(bot, chat, _("Quote #%d was recorded") % (new_index))
@@ -612,7 +613,7 @@ class HaiBot(object):
                         except:
                             self.send_message(bot, chat, _("Use /quote delete <entry number>"))
                     else:
-                        self.send_message(bot, chat, _("You have no writting rights"))
+                        self.send_message(bot, chat, _("You have no writting rights. See /list writers"))
 
             elif args[0] == "random" or args[0] == "r" or args[0] == "ra" :
                 entry = lists.get_random_entry("quote")
@@ -631,6 +632,15 @@ class HaiBot(object):
                         self.send_message(bot, chat, result)
                     else:
                         self.send_message(bot, chat, _("No quotes were found"))
+            elif args[0] == "islist" or args[0] == "i" or args[0] == "is":
+                if profile.get_user_value(sender.id, "is_writer"):
+                    hidden = lists.toogle_hidden_list("quote")
+                    if not hidden:
+                        self.send_message(bot, chat, _("The quotes are now a list.\nBe careful: all the quotes can now be deleted, cloned or full showed"))
+                    else:
+                        self.send_message(bot, chat, _("The quotes are now hidden in list command."))
+                else:
+                    self.send_message(bot, chat, _("You have no writting rights. See /list writers"))
             else:
                 try:
                     if lists.has_entry_index(int(args[0]), "quote" ) :
