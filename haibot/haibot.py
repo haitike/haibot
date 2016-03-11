@@ -702,14 +702,17 @@ class HaiBot(object):
         if len(args) < 1:
             self.send_message(bot, chat, help_text )
         if len(args) < 2:
-            if args[0] == "status":
+            if args[0] == "status" or args[0] == "s":
                 if self.play_job_queue.running:
                     self.send_message(bot, chat, self.play_status)
                 else:
                     self.send_message(bot, chat, _("There is not \"play\" ongoing"))
-            elif args[0] == "stop":
-                if self.play_job_queue.running:
-                    self.stop_play(bot)
+            elif args[0] == "stop" or args[0] == "st":
+                if self.play_user == sender.name:
+                    if self.play_job_queue.running:
+                        self.stop_play(bot)
+                    else:
+                        self.send_message(bot, chat, _("You can only stop your own \"play\""))
                 else:
                     self.send_message(bot, chat, _("There is not \"play\" to stop."))
             else:
