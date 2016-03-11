@@ -378,9 +378,34 @@ class HaiBot(object):
                                     self.send_message(bot, chat, no_writer_text)
 
                         elif args[1] == "clone" or args[1] == "c":
-                            self.send_message(bot, chat, _("NOT IMPLEMENTED"))
+                            if len(args) <4:
+                                self.send_message(bot, chat, _("Use: /list clone <list_index> new name"))
+                            else:
+                                if sender_is_writer:
+                                    list_array =  lists.get_lists(enumerated=True)
+                                    was_cloned = False
+                                    new_list = " ".join(args[3:])
+                                    if lists.has_list(new_list):
+                                        self.send_message(bot, chat, _("Cannot be cloned. \"%s\" already exists!") % (new_list))
+                                    else:
+                                        for list in list_array:
+                                            try:
+                                                if list[0] == int(args[2]):
+                                                    was_cloned = lists.clone_list(list[1], new_list, sender.name)
+                                                    if was_cloned:
+                                                        self.send_message(bot, chat, _("\"%s\" list was cloned to \"%s\" and"
+                                                                                " entries were ordered.")%(list[1], new_list))
+                                            except:
+                                               was_cloned = False
+                                        if not was_cloned:
+                                            self.send_message(bot, chat, _("The list could not be cloned. Use:\n"
+                                                                                "Use: /list clone <list_index> new name"))
+                                else:
+                                    self.send_message(bot, chat, no_writer_text)
+
                         else:
                             self.send_message(bot, chat, _("/list lists <show:add:delete:clone>"))
+
 
                 elif args[0] == "use" or args[0] == "u":
                     if len(args) <2:
@@ -578,6 +603,7 @@ class HaiBot(object):
     def command_quote(self, bot, update, args):
         chat = update.message.chat_id
         sender = update.message.from_user
+        no_write = _("You have no writting rights. See /list writers")
 
         help_text = _(
             "You can add a quote, selecting a message and clicking on \"reply\" and then writting /quote\n\n"
@@ -613,7 +639,7 @@ class HaiBot(object):
                         except:
                             self.send_message(bot, chat, _("Use /quote delete <entry number>"))
                     else:
-                        self.send_message(bot, chat, _("You have no writting rights. See /list writers"))
+                        self.send_message(bot, chat, no_write)
 
             elif args[0] == "random" or args[0] == "r" or args[0] == "ra" :
                 entry = lists.get_random_entry("quote")
@@ -640,7 +666,7 @@ class HaiBot(object):
                     else:
                         self.send_message(bot, chat, _("The quotes are now hidden in list command."))
                 else:
-                    self.send_message(bot, chat, _("You have no writting rights. See /list writers"))
+                    self.send_message(bot, chat, no_write)
             else:
                 try:
                     if lists.has_entry_index(int(args[0]), "quote" ) :

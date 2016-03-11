@@ -15,10 +15,10 @@ if not db[COL_LISTS].find({"hidden": False}).limit(1).count():
 if not db[COL_LISTS].find({"name":"quote"}).limit(1).count():
     db[COL_LISTS].insert_one({"name":"quote", "owner": "None", "index_counter": 0, "hidden": True})
 
-def add_entry(entry, listname, telegram_user):
+def add_entry(entry, listname, telegram_user="None", done=False):
     try:
         new_index = db[COL_LISTS].find_and_modify({"name":listname}, update={"$inc" : {"index_counter" : 1}}, new=True)["index_counter"]
-        new_entry = {"index":new_index, "entry":entry, "owner":telegram_user, "list":listname, "done":False}
+        new_entry = {"index":new_index, "entry":entry, "owner":telegram_user, "list":listname, "done":done}
         db[COL_ENTRIES].insert_one(new_entry)
         return new_index
     except:
@@ -102,8 +102,18 @@ def delete_list(listname):
     except:
         return False
 
-def clone_list(listname):
-    pass
+def clone_list(old_list, new_list, telegram_user="None"):
+    try:
+        add_list(new_list, telegram_user)
+        entries = get_entries(old_list,mode="all")
+        for entry in entries:
+            try:
+                add_entry(entry["entry"], new_list, entry["owner"], entry["done"])
+            except:
+                add_entry(entry["entry"], new_list, "Cloned", False)
+        return True
+    except:
+        return False
 
 def toogle_hidden_list(listname):
     is_hidden = db[COL_LISTS].find_one({"name":listname}, {"hidden":True, "_id":False})["hidden"]
