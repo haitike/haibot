@@ -241,6 +241,7 @@ class HaiBot(object):
         chat = update.message.chat_id
         sender = update.message.from_user
         current_list = profile.get_user_value(sender.id,"current_list")
+        sender_is_writer = profile.get_user_value(sender.id, "is_writer")
         no_writer_text = _("You have no writting rights")
         no_reader_text = _("You have no reading rights")
         non_existent_list_text = _("Your list do not exists. Select one with \"/list use\"")
@@ -251,6 +252,7 @@ class HaiBot(object):
             help_text = _(
                 """Use one of the following commands:
                 /list show <all:done:notdone> - show entries in the current list (s)
+                /list <number> - Show only one entry using his index
                 /list add - add a new entry to the current list (a)
                 /list delete - delete an entry from the current list (d)
                 /list lists <show:add:delete:clone> - manage lists (l)
@@ -280,7 +282,7 @@ class HaiBot(object):
                     if show_help:
                         self.send_message(bot, chat, _("Use /list show <all:done:notdone>"))
                     else:
-                        if lists.has_list(profile.get_user_value(sender.id, "current_list")):
+                        if lists.has_list(current_list):
                             if entry_list:
                                 entry_text= _("%s: \n") % (current_list)
                                 for entry in entry_list:
@@ -298,9 +300,9 @@ class HaiBot(object):
                     if len(args) <2:
                         self.send_message(bot, chat, _("/list add <name>"))
                     else:
-                        if profile.get_user_value(sender.id, "is_writer"):
+                        if sender_is_writer:
                             new_entry = " ".join(args[1:])
-                            if lists.has_list(profile.get_user_value(sender.id, "current_list")):
+                            if lists.has_list(current_list):
                                 new_index = lists.add_entry(new_entry,current_list, sender.name)
                                 self.send_message(bot, chat, _("Entry #%d was added to list \"%s\"") % (new_index, current_list))
                             else:
@@ -312,11 +314,11 @@ class HaiBot(object):
                     if len(args) <2:
                         self.send_message(bot, chat, _("/list delete <entry index>"))
                     else:
-                        if profile.get_user_value(sender.id, "is_writer"):
-                            if lists.has_list(profile.get_user_value(sender.id, "current_list")):
+                        if sender_is_writer:
+                            if lists.has_list(current_list):
                                 try:
                                     if lists.has_entry_index(int(args[1]), current_list):
-                                        deleted_entry = lists.delete_entry(int(args[1]),profile.get_user_value(sender.id, "current_list"))
+                                        deleted_entry = lists.delete_entry(int(args[1]),current_list)
                                         self.send_message(bot, chat, _("Entry #%d was deleted from list \"%s\".")%(deleted_entry["index"], current_list))
                                     else:
                                         self.send_message(bot, chat, _("The entry number does not exist. Use /list show"))
@@ -343,7 +345,7 @@ class HaiBot(object):
                             if len(args) <3:
                                 self.send_message(bot, chat, _("/list lists add <something>"))
                             else:
-                                if profile.get_user_value(sender.id, "is_writer"):
+                                if sender_is_writer:
                                     new_list = " ".join(args[2:])
                                     if lists.has_list(new_list):
                                         self.send_message(bot, chat, _("\"%s\" already exists!") % (new_list))
@@ -357,7 +359,7 @@ class HaiBot(object):
                             if len(args) <3:
                                 self.send_message(bot, chat, _("/list lists delete <list index>"))
                             else:
-                                if profile.get_user_value(sender.id, "is_writer"):
+                                if sender_is_writer:
                                     list_array =  lists.get_lists(enumerated=True)
                                     was_deleted = False
                                     for list in list_array:
@@ -416,7 +418,7 @@ class HaiBot(object):
                             if len(args) <3:
                                 self.send_message(bot, chat, add_writers_help)
                             else:
-                                if profile.get_user_value(sender.id, "is_writer"):
+                                if sender_is_writer:
                                     try:
                                         new_writer = int(args[2])
                                         if profile.has_user(new_writer):
@@ -434,7 +436,7 @@ class HaiBot(object):
                             if len(args) <3:
                                 self.send_message(bot, chat, delete_writers_help)
                             else:
-                                if profile.get_user_value(sender.id, "is_writer"):
+                                if sender_is_writer:
                                     try:
                                         del_writer = int(args[2])
                                         if profile.has_user(del_writer):
@@ -471,7 +473,7 @@ class HaiBot(object):
                             if len(args) <3:
                                 self.send_message(bot, chat, add_readers_help)
                             else:
-                                if profile.get_user_value(sender.id, "is_writer"):
+                                if sender_is_writer:
                                     try:
                                         new_reader = int(args[2])
                                         if profile.has_user(new_reader):
@@ -489,7 +491,7 @@ class HaiBot(object):
                             if len(args) <3:
                                 self.send_message(bot, chat, delete_readers_help)
                             else:
-                                if profile.get_user_value(sender.id, "is_writer"):
+                                if sender_is_writer:
                                     try:
                                         del_reader = int(args[2])
                                         if profile.has_user(del_reader):
@@ -511,11 +513,11 @@ class HaiBot(object):
                     if len(args) <2:
                         self.send_message(bot, chat, _("/list done <entry index>"))
                     else:
-                        if profile.get_user_value(sender.id, "is_writer"):
-                            if lists.has_list(profile.get_user_value(sender.id, "current_list")):
+                        if sender_is_writer:
+                            if lists.has_list(current_list):
                                 try:
                                     if lists.has_entry_index(int(args[1]), current_list):
-                                        entry, done_status = lists.toogle_done_entry(int(args[1]),profile.get_user_value(sender.id, "current_list"))
+                                        entry, done_status = lists.toogle_done_entry(int(args[1]),current_list)
                                         if done_status:
                                             self.send_message(bot, chat,_("#%d: done (list:%s)")%(entry["index"],current_list))
                                             self.send_message(bot, chat,"See: \list show <all:done:notdone>")
@@ -531,7 +533,7 @@ class HaiBot(object):
                             self.send_message(bot, chat, no_writer_text)
 
                 elif args[0] == "random" or args[0] == "ra":
-                    if lists.has_list(profile.get_user_value(sender.id, "current_list")):
+                    if lists.has_list(current_list):
                         entry = lists.get_random_entry(current_list)
                         if entry:
                             if entry["done"] == True:
@@ -545,19 +547,32 @@ class HaiBot(object):
 
                 elif args[0] == "search" or args[0] == "se":
                     if len(args) <2:
-                        self.send_message(bot, chat, _("/quote search <words>"))
+                        self.send_message(bot, chat, _("/list search <words>"))
                     else:
-                        if lists.has_list(profile.get_user_value(sender.id, "current_list")):
+                        if lists.has_list(current_list):
                             result = lists.search_entries(" ".join(args[1:]), current_list)
                             if result:
                                 self.send_message(bot, chat, result)
                             else:
-                                self.send_message(bot, chat, _("No quotes were found"))
+                                self.send_message(bot, chat, _("No entries were found"))
                         else:
                             self.send_message(bot, chat, non_existent_list_text )
 
                 else:
-                    self.send_message(bot, chat, help_text)
+                    try:
+                        if lists.has_entry_index(int(args[0]), current_list ) :
+                            if lists.has_list(current_list):
+                                entry = lists.get_entry( int(args[0]), current_list)
+                                if entry["done"] == True:
+                                    self.send_message(bot, chat, "[%d][done] %s\n" % (entry["index"], entry["entry"]))
+                                else:
+                                    self.send_message(bot, chat, "[%d] %s\n" % (entry["index"], entry["entry"]))
+                            else:
+                                self.send_message(bot, chat, non_existent_list_text )
+                        else:
+                            self.send_message(bot, chat, _("Invalid number. Use /list show o /list search <word>"))
+                    except:
+                        self.send_message(bot, chat, help_text)
 
     @save_user
     def command_quote(self, bot, update, args):
