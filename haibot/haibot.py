@@ -5,7 +5,7 @@ import pytz
 import haibot
 from telegram import Updater
 from telegram.error import TelegramError
-from pytz import timezone, utc
+from datetime import datetime, timedelta
 
 from haibot import lists
 from haibot import profile
@@ -80,7 +80,7 @@ class HaiBot(object):
 
         # Timezone Stuff
         try:
-            self.tzinfo = timezone(haibot.config.get("haibot","TIMEZONE"))
+            self.tzinfo = pytz.timezone(haibot.config.get("haibot","TIMEZONE"))
         except:
             self.tzinfo = pytz.utc
 
@@ -716,19 +716,22 @@ class HaiBot(object):
                 self.send_message(bot, chat, help_text )
         else:
             try:
-                hours = int(args[0])
-                game =  " ".join(args[1:])
-                if hours > MAX_PLAY_HOURS:
+                total_hours = int(args[0])
+                if total_hours > MAX_PLAY_HOURS:
                     self.send_message(bot, chat, _("The max number of hours allowed is %d") % (MAX_PLAY_HOURS))
-                elif hours < 1:
+                elif total_hours < 1:
                     self.send_message(bot, chat, _("Number of hours must be higher than 0"))
                 else:
                     if not self.play_job_queue.running:
+                        game =  " ".join(args[1:])
+                        hour = datetime.now(self.tzinfo)
+                        hour_since = hour.strftime("%H:%M")
+                        hour_until = (hour + timedelta(hours=total_hours)).strftime("%H:%M")
                         self.play_user = sender.name
-                        self.play_status = "%s wants to play: %s (For %d hours)" % (sender.name, game, hours )
+                        self.play_status = "%s wants to play: %s (%s - %s)" % (sender.name, game, hour_since, hour_until )
                         self.send_message(bot, chat, "A notification was sent to all subscribed users. Use /autonot for subscribing")
                         self.autonotify(self.play_status)
-                        self.play_job_queue.put(self.stop_play, hours*60*60, repeat=False)
+                        self.play_job_queue.put(self.stop_play, total_hours*60*60, repeat=False)
                     else:
                         self.send_message(bot, chat, "There is already a play. See /play status for info.")
             except:
