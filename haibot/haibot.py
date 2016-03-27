@@ -840,10 +840,10 @@ class HaiBot(object):
                 self.update_queue.put(text_to_queue)
 
     def stop_play(self,bot):
-            self.autonotify(_("%s stopped playing.") % (self.play_user))
-            self.play_job_queue.stop()
-            self.play_status = None
-            self.play_user = None
+        self.autonotify( self.play_user + _(" stopped playing."))
+        self.play_job_queue.stop()
+        self.play_status = None
+        self.play_user = None
 
     def send_message(self, bot, chat_id, text, with_markdown=False):
         try:
