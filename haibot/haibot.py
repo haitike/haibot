@@ -695,7 +695,7 @@ class HaiBot(object):
         sender = update.message.from_user
         chat = update.message.chat_id
         help_text = _("/play <hours> <game>  - Display that you are playing a game for X hours. "
-                      "(Example: play 2 dota2 ). The message will be sent to users with autonot enabled. "
+                      "(Example: play 2.5 dota2 ). The message will be sent to users with autonot enabled. "
                       "Another notification will be sent automatically when the time indicated elapses. \n\n"
                       "/play status - Display the play message if there is one active \n"
                       "/play stop - Manually stops the play, instead of waiting that the time elapses ")
@@ -711,6 +711,7 @@ class HaiBot(object):
                 if self.play_user == sender.name:
                     if self.play_job_queue.running:
                         self.stop_play(bot)
+                        self.send_message(bot, chat, _("Done."))
                     else:
                         self.send_message(bot, chat, _("You can only stop your own \"play\""))
                 else:
@@ -719,10 +720,10 @@ class HaiBot(object):
                 self.send_message(bot, chat, help_text )
         else:
             try:
-                total_hours = int(args[0])
+                total_hours = float(args[0])
                 if total_hours > MAX_PLAY_HOURS:
                     self.send_message(bot, chat, _("The max number of hours allowed is %d") % (MAX_PLAY_HOURS))
-                elif total_hours < 1:
+                elif total_hours <= 0:
                     self.send_message(bot, chat, _("Number of hours must be higher than 0"))
                 else:
                     if not self.play_job_queue.running:
