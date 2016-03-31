@@ -723,16 +723,15 @@ class HaiBot(object):
                 total_hours = float(args[0])
                 if total_hours > MAX_PLAY_HOURS:
                     self.send_message(bot, chat, _("The max number of hours allowed is %d") % (MAX_PLAY_HOURS))
-                elif total_hours <= 0:
-                    self.send_message(bot, chat, _("Number of hours must be higher than 0"))
+                elif total_hours < 0.02:
+                    self.send_message(bot, chat, _("You tried to set up less than 1 minute of play"))
                 else:
                     if not self.play_job_queue.running:
                         game =  " ".join(args[1:])
                         hour = datetime.now(self.tzinfo)
-                        hour_since = hour.strftime("%H:%M")
                         hour_until = (hour + timedelta(hours=total_hours)).strftime("%H:%M")
                         self.play_user = sender.name
-                        self.play_status = _("%s wants to play: %s (%s - %s)") % (sender.name, game, hour_since, hour_until )
+                        self.play_status = _("%s is ready to play: %s (until %s)") % (sender.name, game, hour_until )
                         self.send_message(bot, chat, _("A notification was sent to all subscribed users. Use /autonot for subscribing"))
                         self.autonotify(self.play_status)
                         self.play_job_queue.put(self.stop_play, total_hours*60*60, repeat=False)
